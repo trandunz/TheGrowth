@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "TheGrowth/PlayerStates/SurvivalPlayerState.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -23,7 +24,6 @@ ASurvivalCharacter::ASurvivalCharacter()
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
-	
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
@@ -50,6 +50,12 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ASurvivalCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASurvivalCharacter::Look);
 		EnhancedInputComponent->BindAction(ScrollAction, ETriggerEvent::Triggered, this, &ASurvivalCharacter::Scroll);
+
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ASurvivalCharacter::StartAim);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndAim);
+
+		EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &ASurvivalCharacter::StartZoom);
+		EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndZoom);
 	}
 	else
 	{
@@ -60,8 +66,11 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void ASurvivalCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	PlayerController = Cast<APlayerController>(Controller);
+	PlayerStateRef = GetPlayerState<ASurvivalPlayerState>();
 	
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	if (IsValid(PlayerController))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
@@ -105,6 +114,36 @@ void ASurvivalCharacter::Scroll(const FInputActionValue& Value)
 	UpdateBoomLength(-ScrollValue * ScrollZoomStrength);
 }
 
+void ASurvivalCharacter::StartAim()
+{
+}
+
+void ASurvivalCharacter::EndAim()
+{
+}
+
+void ASurvivalCharacter::StartZoom()
+{
+}
+
+void ASurvivalCharacter::EndZoom()
+{
+}
+
+void ASurvivalCharacter::OffsetHealth(float Amount)
+{
+	if (PlayerStateRef->IsDead() == false)
+	{
+		PlayerStateRef->OffsetHealth(Amount);
+
+		// Check If It Killed Player //
+		if (PlayerStateRef->IsDead())
+		{
+			SetRagdoll(true);
+		}
+	}
+}
+
 void ASurvivalCharacter::UpdateBoomLength(float Increment)
 {
 	float NewArmLength = CameraBoom->TargetArmLength + Increment;
@@ -142,5 +181,33 @@ void ASurvivalCharacter::SetPerspective(bool FirstPerson)
 		FollowCamera->AttachToComponent(CameraBoom, FAttachmentTransformRules::SnapToTargetNotIncludingScale, USpringArmComponent::SocketName);
 		FollowCamera->bUsePawnControlRotation = false;
 		bUseControllerRotationYaw = false;
+	}
+}
+
+void ASurvivalCharacter::SetRagdoll(bool Ragdoll)
+{
+	if (Ragdoll)
+	{
+		GetMesh()->SetAllBodiesSimulatePhysics(true);
+		GetMesh()->SetSimulatePhysics(true);
+		GetMesh()->WakeAllRigidBodies();
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+
+		if (IsValid(PlayerController))
+		{
+			PlayerController->SetIgnoreMoveInput(true);
+		}
+	}
+	else
+	{
+		GetMesh()->SetAllBodiesSimulatePhysics(false);
+		GetMesh()->SetSimulatePhysics(false);
+		GetMesh()->WakeAllRigidBodies();
+		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		
+		if (IsValid(PlayerController))
+		{
+			PlayerController->SetIgnoreMoveInput(false);
+		}
 	}
 }
