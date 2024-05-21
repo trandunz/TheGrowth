@@ -10,9 +10,17 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Animation/AnimInstanceProxy.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "TheGrowth/Components/InventoryComponent.h"
 #include "TheGrowth/Components/SurvivalMovementComponent.h"
+#include "TheGrowth/HUD/SurvivalHUD.h"
+#include "TheGrowth/HUD/Widgets/W_SurvivalHUD.h"
+#include "TheGrowth/HUD/Widgets/Inventory/W_Inventory.h"
+#include "TheGrowth/Interfaces/InteractInterface.h"
+#include "TheGrowth/Items/ItemBase.h"
 #include "TheGrowth/PlayerStates/SurvivalPlayerState.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -34,6 +42,8 @@ ASurvivalCharacter::ASurvivalCharacter()
 
 	ZoomTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("ZoomTimeline"));
 	CameraResetTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("CameraResetTimeline"));
+
+	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 }
 
 void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -63,6 +73,10 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 		EnhancedInputComponent->BindAction(FreeLookAction, ETriggerEvent::Started, this, &ASurvivalCharacter::StartFreeLook);
 		EnhancedInputComponent->BindAction(FreeLookAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndFreeLook);
+
+		EnhancedInputComponent->BindAction(ToggleInventoryAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::ToggleInventoryWidget);
+
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::TryInteract);
 	}
 	else
 	{
@@ -79,9 +93,13 @@ void ASurvivalCharacter::BeginPlay()
 	
 	if (IsValid(PlayerController))
 	{
+		HUDRef = PlayerController->GetHUD<ASurvivalHUD>();
+		Inventory->InventoryWidget = HUDRef->HUDWidget->InventoryMenu;
+		
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			Subsystem->AddMappingContext(OOCMappingContext, 1);
 		}
 	}
 
@@ -102,6 +120,13 @@ void ASurvivalCharacter::BeginPlay()
 		CameraResetTimeline->SetTimelineFinishedFunc(CameraResetFinishedCallback);
 		CameraResetTimeline->SetPlayRate(1.0f / FMath::Clamp(CameraResetTime, 0.001f, 2.0f));
 	}
+}
+
+void ASurvivalCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	CheckForInteractables();
 }
 
 void ASurvivalCharacter::Move(const FInputActionValue& Value)
@@ -301,4 +326,87 @@ void ASurvivalCharacter::OnCameraResetTimelineFinish()
 {
 	MovementComponent->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = true;
+}
+
+void ASurvivalCharacter::ToggleInventoryWidget()
+{
+	if (IsValid(HUDRef) == false)
+		return;
+
+	HUDRef->ToggleInventoryMenu();
+
+	if (IsValid(PlayerController) == false)
+		return;
+
+	DisableInput(PlayerController);
+	EnableInput(PlayerController);
+	PlayerController->SetInputMode(FInputModeUIOnly{});
+}
+
+void ASurvivalCharacter::CheckForInteractables()
+{
+
+	
+	FVector TraceStart = FollowCamera->GetComponentLocation();
+	FVector TraceEnd = TraceStart + FollowCamera->GetForwardVector() * InteractRange;
+	
+	FCollisionQueryParams TraceParams{};
+	TraceParams.AddIgnoredActor(this);
+	TArray<FHitResult> HitResults{};
+	
+	if (!GetWorld()->LineTraceMultiByChannel(HitResults, TraceStart, TraceEnd, ECC_Visibility, TraceParams))
+	{
+		if (IsValid(HUDRef))
+			HUDRef->SetCrosshairVisible(false);
+
+		LastInteractable = nullptr;
+		return;
+	}
+
+	TArray<AActor*> InteractableActors{};
+	for(auto Result : HitResults)
+	{
+		if (auto Interactable = Cast<IInteractInterface>(Result.GetActor()))
+		{
+			InteractableActors.Add(Result.GetActor());
+		}
+	}
+
+	if (InteractableActors.Num() <= 0)
+	{
+		if (IsValid(HUDRef))
+			HUDRef->SetCrosshairVisible(false);
+
+		LastInteractable = nullptr;
+		return;
+	}
+	
+	float ClosestDistance{};
+	AActor* ClosestInteractableActor = UGameplayStatics::FindNearestActor(TraceStart, InteractableActors, ClosestDistance);
+	IInteractInterface* ClosestInteractable = Cast<IInteractInterface>(ClosestInteractableActor);
+
+	if (ClosestInteractable != LastInteractable)
+	{
+		if (IsValid(HUDRef))
+			HUDRef->SetCrosshairVisible(true);
+
+		LastInteractable = ClosestInteractable;
+	}
+}
+
+void ASurvivalCharacter::TryInteract()
+{
+	if (LastInteractable == nullptr)
+		return;
+
+	LastInteractable->Interact(this);
+}
+
+void ASurvivalCharacter::PickupItem(AItemBase* Item)
+{
+	if (IsValid(Item) == false)
+		return;
+
+	Inventory->AddItem(Item);
+	Item->Destroy();
 }

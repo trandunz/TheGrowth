@@ -10,6 +10,8 @@ UCLASS()
 class THEGROWTH_API UW_SurvivalHUD : public UUserWidget
 {
 	GENERATED_BODY()
+	friend class ASurvivalHUD;
+	friend class ASurvivalCharacter;
 
 protected:
 	virtual void NativeOnInitialized() override;
@@ -19,6 +21,12 @@ protected:
 	UFUNCTION()
 	void UpdateHealthText();
 	
+	UFUNCTION()
+	void ToggleInventoryMenu();
+	
+	UFUNCTION()
+	void SetCrosshairVisible(bool Visible);
+	
 protected: // References //
 	UPROPERTY(VisibleAnywhere, Category= References)
 	class UEntityComponent* OwningEntityComponent{nullptr};
@@ -26,4 +34,8 @@ protected: // References //
 protected: // Components //
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (BindWidget))
 	class UTextBlock* HealthText{nullptr};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (BindWidget))
+	class UW_Inventory* InventoryMenu{nullptr};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (BindWidget))
+	class UImage* Crosshair{nullptr};
 };

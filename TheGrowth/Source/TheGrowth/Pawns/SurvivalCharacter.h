@@ -13,11 +13,14 @@ UCLASS(config=Game)
 class ASurvivalCharacter : public ACharacter
 {
 	GENERATED_BODY()
+	friend class AItemBase;
+	friend class UW_SurvivalHUD;
 
 protected:
 	ASurvivalCharacter();
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 	
 protected: // Input // 
 	void Move(const struct FInputActionValue& Value);
@@ -49,6 +52,22 @@ protected:
 	void UpdateCameraResetTimeline(float Delta);
 	UFUNCTION()
 	void OnCameraResetTimelineFinish();
+
+	UFUNCTION()
+	void ToggleInventoryWidget();
+
+	UFUNCTION()
+	void CheckForInteractables();
+	UFUNCTION()
+	void TryInteract();
+
+	UFUNCTION()
+	void PickupItem(class AItemBase* Item);
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
+	float InteractRange{200.0f};
+	class IInteractInterface* LastInteractable{};
 	
 protected: // Camera Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
@@ -88,20 +107,26 @@ protected: // References
 	class ASurvivalPlayerState* PlayerStateRef{nullptr};
 	UPROPERTY(BlueprintReadOnly, Category= References)
 	class USurvivalMovementComponent* MovementComponent{nullptr};
+	UPROPERTY(BlueprintReadOnly, Category= References)
+	class ASurvivalHUD* HUDRef{nullptr};
 	
 protected: // Components //
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* CameraBoom{nullptr};
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera{nullptr};
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
 	class UTimelineComponent* ZoomTimeline{nullptr};
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
 	class UTimelineComponent* CameraResetTimeline{nullptr};
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
+	class UInventoryComponent* Inventory{nullptr};
+	
 protected: // Input //
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext{nullptr};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputMappingContext* OOCMappingContext{nullptr};
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* JumpAction{nullptr};
@@ -119,5 +144,11 @@ protected: // Input //
 	class UInputAction* ZoomAction{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* FreeLookAction{nullptr};
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* InteractAction{nullptr};
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ToggleInventoryAction{nullptr};
 };
 

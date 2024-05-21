@@ -3,7 +3,7 @@
 #include "SurvivalHUD.h"
 
 #include "Blueprint/UserWidget.h"
-#include "TheGrowth/Widgets/W_SurvivalHUD.h"
+#include "Widgets/W_SurvivalHUD.h"
 
 ASurvivalHUD::ASurvivalHUD()
 {
@@ -25,4 +25,20 @@ void ASurvivalHUD::BeginPlay()
 		return;
 
 	HUDWidget->AddToViewport();
+}
+
+void ASurvivalHUD::ToggleInventoryMenu()
+{
+	if (IsValid(HUDWidget) == false)
+		return;
+
+	HUDWidget->ToggleInventoryMenu();
+}
+
+void ASurvivalHUD::SetCrosshairVisible(bool Visible)
+{
+	if (IsValid(HUDWidget) == false)
+		return;
+
+	HUDWidget->SetCrosshairVisible(Visible);
 }
