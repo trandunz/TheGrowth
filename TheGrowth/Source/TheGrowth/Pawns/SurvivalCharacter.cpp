@@ -120,6 +120,8 @@ void ASurvivalCharacter::BeginPlay()
 		CameraResetTimeline->SetTimelineFinishedFunc(CameraResetFinishedCallback);
 		CameraResetTimeline->SetPlayRate(1.0f / FMath::Clamp(CameraResetTime, 0.001f, 2.0f));
 	}
+
+	SetPerspective(true);
 }
 
 void ASurvivalCharacter::Tick(float DeltaSeconds)
