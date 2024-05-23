@@ -32,6 +32,7 @@ protected: // Input //
 	void EndZoom();
 	void StartFreeLook();
 	void EndFreeLook();
+	void ToggleCrouch();
 	
 public:
 	UFUNCTION()
@@ -144,6 +145,8 @@ protected: // Input //
 	class UInputAction* ZoomAction{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* FreeLookAction{nullptr};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* CrouchAction{nullptr};
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* InteractAction{nullptr};

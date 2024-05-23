@@ -77,6 +77,9 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(ToggleInventoryAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::ToggleInventoryWidget);
 
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::TryInteract);
+
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASurvivalCharacter::ToggleCrouch);
+		//EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndAim);
 	}
 	else
 	{
@@ -217,6 +220,14 @@ void ASurvivalCharacter::EndFreeLook()
 	FreeLookEndYaw = Controller->GetControlRotation().Yaw;
 	
 	CameraResetTimeline->PlayFromStart();
+}
+
+void ASurvivalCharacter::ToggleCrouch()
+{
+	if (bIsCrouched)
+		UnCrouch();
+	else
+		Crouch(true);
 }
 
 void ASurvivalCharacter::OffsetHealth(float Amount)
