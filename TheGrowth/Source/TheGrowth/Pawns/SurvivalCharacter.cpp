@@ -263,6 +263,8 @@ void ASurvivalCharacter::SetPerspective(bool FirstPerson)
 		FollowCamera->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Head"));
 		FollowCamera->SetRelativeRotation({0.000000,90.000000,-90.000000});
 		FollowCamera->SetRelativeLocation({0.0f, 10.0f, 0.0f});
+
+		CameraBoom->TargetArmLength = MinBoomLength;
 		
 		FollowCamera->bUsePawnControlRotation = true;
 		CameraBoom->bUsePawnControlRotation = false;
