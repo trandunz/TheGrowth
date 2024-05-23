@@ -13,7 +13,7 @@ class THEGROWTH_API UW_Inventory : public UUserWidget
 	friend class UW_SurvivalHUD;
 	friend class UInventoryComponent;
 	friend class ASurvivalCharacter;
-
+	
 protected:
 	UFUNCTION()
 	class UW_InventorySlot* GetGridSlotAtIndex(int32 X, int32 Y);

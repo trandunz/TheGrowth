@@ -37,4 +37,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, meta = (BindWidget))
 	class UUniformGridPanel* UniformGrid{nullptr};
 
+	UPROPERTY(VisibleAnywhere, meta = (BindWidget))
+	class UOverlay* Overlay{nullptr};
+
 };

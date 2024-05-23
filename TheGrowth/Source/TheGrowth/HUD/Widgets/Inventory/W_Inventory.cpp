@@ -12,6 +12,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
 #include "Components/UniformGridPanel.h"
 #include "TheGrowth/Components/InventoryComponent.h"
 #include "TheGrowth/DataAssets/ItemData.h"
@@ -47,24 +48,22 @@ void UW_Inventory::AddItem(int32 X, int32 Y, UItemData* Item)
 	if (IsValid(ItemWidgetClass) == false)
 		return;
 	
-	UW_InventoryItem* ItemIcon = CreateWidget<UW_InventoryItem>(this, ItemWidgetClass);
+	UW_InventoryItem* ItemIcon = CreateWidget<UW_InventoryItem>(InventoryGrid->Overlay, ItemWidgetClass);
 	ItemIcon->Icon->SetBrushFromTexture(Item->Icon, true);
-	auto ItemIconSlot = Canvas->AddChildToCanvas(ItemIcon);
+	InventoryGrid->Overlay->AddChildToOverlay(ItemIcon);
 	
 	FVector2D SlotSize = InventoryGrid->GetSlotAtIndex(X, Y)->GetCachedGeometry().GetLocalSize();
 	SlotSize.X *= Item->SizeX;
 	SlotSize.Y *= Item->SizeY;
-	ItemIconSlot->SetSize(SlotSize);
+	ItemIcon->Icon->SetDesiredSizeOverride(SlotSize);
 	UE_LOG(LogTemp, Warning, TEXT("Slot Size %s"), *SlotSize.ToString() );
-	//
-	//FVector2D LocalPos = USlateBlueprintLibrary::GetLocalTopLeft(InventoryGrid->GetSlotAtIndex(X, Y)->GetCachedGeometry());
-	//FVector2D ViewportPos;
-	//FVector2D PixelPos;
-	//USlateBlueprintLibrary::LocalToViewport(GetWorld(), InventoryGrid->GetSlotAtIndex(X, Y)->GetCachedGeometry(), {0.5f, 0.5f}, PixelPos, ViewportPos);
-	//ItemIconSlot->SetPosition(ViewportPos * UWidgetLayoutLibrary::GetViewportScale(GetWorld()));
-	//Canvas->InvalidateLayoutAndVolatility();
-	//
-	//UE_LOG(LogTemp, Warning, TEXT("Item Icon Spawned at %s"), *ItemIconSlot->GetPosition().ToString() );
+	
+	FVector2D ViewportPos;
+	FVector2D PixelPos;
+	USlateBlueprintLibrary::LocalToViewport(GetWorld(), InventoryGrid->GetSlotAtIndex(X, Y)->GetCachedGeometry(), {0.0f, 0.0f}, PixelPos, ViewportPos);
+	ItemIcon->SetPositionInViewport(ViewportPos);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Item Icon Spawned at %s"), *ViewportPos.ToString() );
 	
 	
 	ItemIcons.Add({(double)X, (double)Y}, ItemIcon);
