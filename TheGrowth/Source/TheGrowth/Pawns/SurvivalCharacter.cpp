@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "InputMappingContext.h"
 #include "Animation/AnimInstanceProxy.h"
 #include "Components/TimelineComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -44,6 +45,8 @@ ASurvivalCharacter::ASurvivalCharacter()
 	CameraResetTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("CameraResetTimeline"));
 
 	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+
+	LeanTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("LeanTimeline"));
 }
 
 void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -79,7 +82,12 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::TryInteract);
 
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &ASurvivalCharacter::ToggleCrouch);
-		//EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndAim);
+
+		EnhancedInputComponent->BindAction(LeanActionLeft, ETriggerEvent::Started, this, &ASurvivalCharacter::StartLean, true);
+		EnhancedInputComponent->BindAction(LeanActionLeft, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndLean, true);
+
+		EnhancedInputComponent->BindAction(LeanActionRight, ETriggerEvent::Started, this, &ASurvivalCharacter::StartLean, false);
+		EnhancedInputComponent->BindAction(LeanActionRight, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndLean, false);
 	}
 	else
 	{
@@ -122,6 +130,13 @@ void ASurvivalCharacter::BeginPlay()
 		CameraResetTimeline->AddInterpFloat(CameraResetCurve, CameraResetCallback);
 		CameraResetTimeline->SetTimelineFinishedFunc(CameraResetFinishedCallback);
 		CameraResetTimeline->SetPlayRate(1.0f / FMath::Clamp(CameraResetTime, 0.001f, 2.0f));
+	}
+	if (LeanCurve)
+	{
+		FOnTimelineFloat LeanCallback;
+		LeanCallback.BindDynamic(this, &ASurvivalCharacter::UpdateLeanTimeline);
+		LeanTimeline->AddInterpFloat(LeanCurve, LeanCallback);
+		LeanTimeline->SetPlayRate(1.0f / FMath::Clamp(LeanTime, 0.001f, 2.0f));
 	}
 
 	SetPerspective(true);
@@ -228,6 +243,51 @@ void ASurvivalCharacter::ToggleCrouch()
 		UnCrouch();
 	else
 		Crouch(true);
+}
+
+void ASurvivalCharacter::StartLean(bool Left)
+{
+	if (Left)
+		LeanInput = FMath::Clamp(LeanInput - 1, -1, 1);
+	else
+		LeanInput = FMath::Clamp(LeanInput + 1, -1, 1);
+
+	if (LeanInput != 0)
+	{
+		LeanStartAngle = LeanAngle;
+		TargetLeanAngle = MaximumLeanAngle * LeanInput;
+		LeanTimeline->PlayFromStart();
+	}
+	else
+	{
+		LeanStartAngle = 0;
+		TargetLeanAngle = LeanAngle;
+		LeanTimeline->Reverse();
+	}
+}
+
+void ASurvivalCharacter::EndLean(bool Left)
+{
+	float NewLeanInput{};
+	if (Left)
+		NewLeanInput = FMath::Clamp(LeanInput + 1, -1, 1);
+	else
+		NewLeanInput = FMath::Clamp(LeanInput - 1, -1, 1);
+	
+	if (NewLeanInput != 0)
+	{
+		LeanStartAngle = LeanAngle;
+		TargetLeanAngle = MaximumLeanAngle * NewLeanInput;
+		LeanTimeline->PlayFromStart();
+	}
+	else
+	{
+		LeanStartAngle = 0;
+		TargetLeanAngle = MaximumLeanAngle * LeanInput;
+		LeanTimeline->Reverse();
+	}
+	
+	LeanInput = NewLeanInput;
 }
 
 void ASurvivalCharacter::OffsetHealth(float Amount)
@@ -343,6 +403,11 @@ void ASurvivalCharacter::OnCameraResetTimelineFinish()
 	bUseControllerRotationYaw = true;
 }
 
+void ASurvivalCharacter::UpdateLeanTimeline(float Delta)
+{
+	LeanAngle = FMath::Lerp(LeanStartAngle, TargetLeanAngle, Delta);
+}
+
 void ASurvivalCharacter::ToggleInventoryWidget()
 {
 	if (IsValid(HUDRef) == false)
@@ -360,8 +425,6 @@ void ASurvivalCharacter::ToggleInventoryWidget()
 
 void ASurvivalCharacter::CheckForInteractables()
 {
-
-	
 	FVector TraceStart = FollowCamera->GetComponentLocation();
 	FVector TraceEnd = TraceStart + FollowCamera->GetForwardVector() * InteractRange;
 	

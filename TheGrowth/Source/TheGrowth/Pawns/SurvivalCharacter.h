@@ -34,6 +34,9 @@ protected: // Input //
 	void EndFreeLook();
 	void ToggleCrouch();
 	
+	void StartLean(bool Left);
+	void EndLean(bool Left);
+	
 public:
 	UFUNCTION()
 	void OffsetHealth(float Amount);
@@ -53,6 +56,8 @@ protected:
 	void UpdateCameraResetTimeline(float Delta);
 	UFUNCTION()
 	void OnCameraResetTimelineFinish();
+	UFUNCTION()
+	void UpdateLeanTimeline(float Delta);
 
 	UFUNCTION()
 	void ToggleInventoryWidget();
@@ -65,10 +70,26 @@ protected:
 	UFUNCTION()
 	void PickupItem(class AItemBase* Item);
 
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
+protected: // Interaction
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Interaction, meta = (AllowPrivateAccess = "true"))
 	float InteractRange{200.0f};
 	class IInteractInterface* LastInteractable{};
+	
+protected: // Movement Settings
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Movement, meta = (AllowPrivateAccess = "true"))
+	float MaximumLeanAngle{25.0f};
+	UPROPERTY(BlueprintReadOnly, Category= Movement)
+	float LeanAngle{};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Movement, meta = (AllowPrivateAccess = "true"))
+	float LeanTime{0.3f};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Movement, meta = (AllowPrivateAccess = "true"))
+	UCurveFloat* LeanCurve{nullptr};
+	UPROPERTY(BlueprintReadOnly, Category= Movement)
+	float LeanStartAngle{};
+	UPROPERTY(BlueprintReadOnly, Category= Movement)
+	float TargetLeanAngle{};
+	UPROPERTY(BlueprintReadOnly, Category= Movement)
+	float LeanInput{};
 	
 protected: // Camera Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
@@ -122,6 +143,8 @@ protected: // Components //
 	class UTimelineComponent* CameraResetTimeline{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
 	class UInventoryComponent* Inventory{nullptr};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
+	class UTimelineComponent* LeanTimeline{nullptr};
 	
 protected: // Input //
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -148,6 +171,11 @@ protected: // Input //
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* CrouchAction{nullptr};
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* LeanActionLeft{nullptr};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* LeanActionRight{nullptr};
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* InteractAction{nullptr};
 	
