@@ -57,7 +57,7 @@ protected:
 	UFUNCTION()
 	void OnCameraResetTimelineFinish();
 	UFUNCTION()
-	void UpdateLeanTimeline(float Delta);
+	void UpdateLeanAngle(float DeltaSeconds);
 
 	UFUNCTION()
 	void ToggleInventoryWidget();
@@ -81,13 +81,7 @@ protected: // Movement Settings
 	UPROPERTY(BlueprintReadOnly, Category= Movement)
 	float LeanAngle{};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Movement, meta = (AllowPrivateAccess = "true"))
-	float LeanTime{0.3f};
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Movement, meta = (AllowPrivateAccess = "true"))
-	UCurveFloat* LeanCurve{nullptr};
-	UPROPERTY(BlueprintReadOnly, Category= Movement)
-	float LeanStartAngle{};
-	UPROPERTY(BlueprintReadOnly, Category= Movement)
-	float TargetLeanAngle{};
+	float LeanSpeed{200.0f};
 	UPROPERTY(BlueprintReadOnly, Category= Movement)
 	float LeanInput{};
 	
@@ -143,9 +137,7 @@ protected: // Components //
 	class UTimelineComponent* CameraResetTimeline{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
 	class UInventoryComponent* Inventory{nullptr};
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
-	class UTimelineComponent* LeanTimeline{nullptr};
-	
+
 protected: // Input //
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext{nullptr};

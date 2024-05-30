@@ -45,8 +45,6 @@ ASurvivalCharacter::ASurvivalCharacter()
 	CameraResetTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("CameraResetTimeline"));
 
 	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
-
-	LeanTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("LeanTimeline"));
 }
 
 void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -131,13 +129,6 @@ void ASurvivalCharacter::BeginPlay()
 		CameraResetTimeline->SetTimelineFinishedFunc(CameraResetFinishedCallback);
 		CameraResetTimeline->SetPlayRate(1.0f / FMath::Clamp(CameraResetTime, 0.001f, 2.0f));
 	}
-	if (LeanCurve)
-	{
-		FOnTimelineFloat LeanCallback;
-		LeanCallback.BindDynamic(this, &ASurvivalCharacter::UpdateLeanTimeline);
-		LeanTimeline->AddInterpFloat(LeanCurve, LeanCallback);
-		LeanTimeline->SetPlayRate(1.0f / FMath::Clamp(LeanTime, 0.001f, 2.0f));
-	}
 
 	SetPerspective(true);
 }
@@ -147,6 +138,8 @@ void ASurvivalCharacter::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	CheckForInteractables();
+
+	UpdateLeanAngle(DeltaSeconds);
 }
 
 void ASurvivalCharacter::Move(const FInputActionValue& Value)
@@ -248,46 +241,25 @@ void ASurvivalCharacter::ToggleCrouch()
 void ASurvivalCharacter::StartLean(bool Left)
 {
 	if (Left)
-		LeanInput = FMath::Clamp(LeanInput - 1, -1, 1);
-	else
-		LeanInput = FMath::Clamp(LeanInput + 1, -1, 1);
-
-	if (LeanInput != 0)
 	{
-		LeanStartAngle = LeanAngle;
-		TargetLeanAngle = MaximumLeanAngle * LeanInput;
-		LeanTimeline->PlayFromStart();
+		LeanInput = FMath::Clamp(LeanInput - 1, -1, 1);
 	}
 	else
 	{
-		LeanStartAngle = 0;
-		TargetLeanAngle = LeanAngle;
-		LeanTimeline->Reverse();
+		LeanInput = FMath::Clamp(LeanInput + 1, -1, 1);
 	}
 }
 
 void ASurvivalCharacter::EndLean(bool Left)
 {
-	float NewLeanInput{};
 	if (Left)
-		NewLeanInput = FMath::Clamp(LeanInput + 1, -1, 1);
-	else
-		NewLeanInput = FMath::Clamp(LeanInput - 1, -1, 1);
-	
-	if (NewLeanInput != 0)
 	{
-		LeanStartAngle = LeanAngle;
-		TargetLeanAngle = MaximumLeanAngle * NewLeanInput;
-		LeanTimeline->PlayFromStart();
+		LeanInput = FMath::Clamp(LeanInput + 1, -1, 1);
 	}
 	else
 	{
-		LeanStartAngle = 0;
-		TargetLeanAngle = MaximumLeanAngle * LeanInput;
-		LeanTimeline->Reverse();
+		LeanInput = FMath::Clamp(LeanInput - 1, -1, 1);
 	}
-	
-	LeanInput = NewLeanInput;
 }
 
 void ASurvivalCharacter::OffsetHealth(float Amount)
@@ -403,9 +375,27 @@ void ASurvivalCharacter::OnCameraResetTimelineFinish()
 	bUseControllerRotationYaw = true;
 }
 
-void ASurvivalCharacter::UpdateLeanTimeline(float Delta)
+void ASurvivalCharacter::UpdateLeanAngle(float DeltaSeconds)
 {
-	LeanAngle = FMath::Lerp(LeanStartAngle, TargetLeanAngle, Delta);
+	if (LeanInput == 0)
+	{
+		if (LeanAngle < 0)
+		{
+			LeanAngle = FMath::Clamp(LeanAngle + DeltaSeconds * LeanSpeed, -MaximumLeanAngle, 0);
+		}
+		else if (LeanAngle > 0)
+		{
+			LeanAngle = FMath::Clamp(LeanAngle - DeltaSeconds * LeanSpeed, 0, MaximumLeanAngle);
+		}
+	}
+	else if (LeanInput < 0)
+	{
+		LeanAngle = FMath::Clamp(LeanAngle - DeltaSeconds * LeanSpeed, -MaximumLeanAngle, MaximumLeanAngle);
+	}
+	else if (LeanInput > 0)
+	{
+		LeanAngle = FMath::Clamp(LeanAngle + DeltaSeconds * LeanSpeed, -MaximumLeanAngle, MaximumLeanAngle);
+	}
 }
 
 void ASurvivalCharacter::ToggleInventoryWidget()
