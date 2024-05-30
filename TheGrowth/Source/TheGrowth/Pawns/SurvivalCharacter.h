@@ -36,7 +36,14 @@ protected: // Input //
 	
 	void StartLean(bool Left);
 	void EndLean(bool Left);
-	
+
+	void Jump() override;
+
+	void Prone();
+
+	void StartSprint();
+	void EndSprint();
+
 public:
 	UFUNCTION()
 	void OffsetHealth(float Amount);
@@ -162,6 +169,8 @@ protected: // Input //
 	class UInputAction* FreeLookAction{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* CrouchAction{nullptr};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ProneAction{nullptr};
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LeanActionLeft{nullptr};

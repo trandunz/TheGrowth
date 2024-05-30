@@ -49,11 +49,7 @@ ASurvivalCharacter::ASurvivalCharacter()
 
 void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	if (UCharacterMovementComponent* BaseMovementComponent = GetCharacterMovement())
-		if (IsValid(BaseMovementComponent))
-			if (USurvivalMovementComponent* SurvivalMovementComponent = Cast<USurvivalMovementComponent>(BaseMovementComponent))
-				if (IsValid(SurvivalMovementComponent))
-					MovementComponent = SurvivalMovementComponent;
+
 	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
@@ -69,8 +65,8 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Started, this, &ASurvivalCharacter::StartZoom);
 		EnhancedInputComponent->BindAction(ZoomAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndZoom);
 
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, MovementComponent, &USurvivalMovementComponent::StartSprint);
-		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, MovementComponent, &USurvivalMovementComponent::EndSprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ASurvivalCharacter::StartSprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndSprint);
 
 		EnhancedInputComponent->BindAction(FreeLookAction, ETriggerEvent::Started, this, &ASurvivalCharacter::StartFreeLook);
 		EnhancedInputComponent->BindAction(FreeLookAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndFreeLook);
@@ -86,6 +82,8 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 		EnhancedInputComponent->BindAction(LeanActionRight, ETriggerEvent::Started, this, &ASurvivalCharacter::StartLean, false);
 		EnhancedInputComponent->BindAction(LeanActionRight, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndLean, false);
+
+		EnhancedInputComponent->BindAction(ProneAction, ETriggerEvent::Started, this, &ASurvivalCharacter::Prone);
 	}
 	else
 	{
@@ -99,6 +97,7 @@ void ASurvivalCharacter::BeginPlay()
 
 	PlayerController = Cast<APlayerController>(Controller);
 	PlayerStateRef = GetPlayerState<ASurvivalPlayerState>();
+	MovementComponent = GetCharacterMovement<USurvivalMovementComponent>();
 	
 	if (IsValid(PlayerController))
 	{
@@ -260,6 +259,45 @@ void ASurvivalCharacter::EndLean(bool Left)
 	{
 		LeanInput = FMath::Clamp(LeanInput - 1, -1, 1);
 	}
+}
+
+void ASurvivalCharacter::Jump()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Attempted Jump") );
+	
+	if (IsValid(MovementComponent))
+	{
+		if (MovementComponent->IsMovementMode(MOVE_Custom) && MovementComponent->IsCustomMovementMode(ECustomMovementMode::CMOVE_Prone))
+		{
+			Crouch(true);
+		}
+	}
+	
+	Super::Jump();
+}
+
+void ASurvivalCharacter::Prone()
+{
+	if (IsValid(MovementComponent) == false)
+		return;
+
+	MovementComponent->Prone();
+}
+
+void ASurvivalCharacter::StartSprint()
+{
+	if (IsValid(MovementComponent) == false)
+		return;
+
+	MovementComponent->StartSprint();
+}
+
+void ASurvivalCharacter::EndSprint()
+{
+	if (IsValid(MovementComponent) == false)
+		return;
+
+	MovementComponent->EndSprint();
 }
 
 void ASurvivalCharacter::OffsetHealth(float Amount)
