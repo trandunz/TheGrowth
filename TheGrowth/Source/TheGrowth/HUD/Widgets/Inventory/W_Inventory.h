@@ -15,27 +15,24 @@ class THEGROWTH_API UW_Inventory : public UUserWidget
 	friend class ASurvivalCharacter;
 	
 protected:
-	UFUNCTION()
-	class UW_InventorySlot* GetGridSlotAtIndex(int32 X, int32 Y);
-
-	UFUNCTION()
-	void SetGridSlotColor(int32 X, int32 Y, FLinearColor Color);
-
-	UFUNCTION()
-	void AddItem(int32 X, int32 Y, class UItemData* Item);
-
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TSubclassOf<class UW_InventoryItem> ItemWidgetClass{};
-	
-protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "References", meta = (BindWidget))
-	TMap<FVector2D, class UW_InventoryItem*> ItemIcons{};
+	UFUNCTION(BlueprintCallable)
+	void SetSelectedWidgetIndex(int32 Index);
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
-	class UW_InventoryGrid* InventoryGrid{};
+	class UW_Overall* Overall{};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
+	class UW_Gear* Gear{};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
+	class UW_Health* Health{};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
+	class UW_Skills* Skills{};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
+	class UW_Map* Map{};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
+	class UW_Tasks* Tasks{};
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
-	class UCanvasPanel* Canvas{};
+	class UWidgetSwitcher* MenuSelector{};
+	
 };

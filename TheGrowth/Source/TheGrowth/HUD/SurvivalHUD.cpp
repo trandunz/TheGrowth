@@ -27,6 +27,14 @@ void ASurvivalHUD::BeginPlay()
 	HUDWidget->AddToViewport();
 }
 
+void ASurvivalHUD::LateInitialize()
+{
+	if (IsValid(HUDWidget))
+	{
+		HUDWidget->LateInitialize();
+	}
+}
+
 void ASurvivalHUD::ToggleInventoryMenu()
 {
 	if (IsValid(HUDWidget) == false)

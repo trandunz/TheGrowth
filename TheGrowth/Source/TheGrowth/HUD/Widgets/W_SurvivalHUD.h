@@ -14,13 +14,11 @@ class THEGROWTH_API UW_SurvivalHUD : public UUserWidget
 	friend class ASurvivalCharacter;
 
 protected:
+	virtual void LateInitialize();
 	virtual void NativeOnInitialized() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 protected:
-	UFUNCTION()
-	void UpdateHealthText();
-	
 	UFUNCTION()
 	void ToggleInventoryMenu();
 	
@@ -32,8 +30,6 @@ protected: // References //
 	class UEntityComponent* OwningEntityComponent{nullptr};
 
 protected: // Components //
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (BindWidget))
-	class UTextBlock* HealthText{nullptr};
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (BindWidget))
 	class UW_Inventory* InventoryMenu{nullptr};
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (BindWidget))

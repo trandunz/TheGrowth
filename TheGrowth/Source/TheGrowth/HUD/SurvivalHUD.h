@@ -11,10 +11,12 @@ class THEGROWTH_API ASurvivalHUD : public AHUD
 {
 	GENERATED_BODY()
 	friend class ASurvivalCharacter;
+	friend class ASurvivalController;
 	
 protected:
 	ASurvivalHUD();
 	virtual void BeginPlay() override;
+	virtual void LateInitialize();
 
 protected:
 	UFUNCTION()

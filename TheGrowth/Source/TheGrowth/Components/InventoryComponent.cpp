@@ -58,11 +58,6 @@ void UInventoryComponent::AddItem(AItemBase* Item)
 			{
 				Inventory[(Y * SizeX) + X] = Item->ItemData;
 				
-				if (IsValid(InventoryWidget))
-				{
-					InventoryWidget->AddItem(X, Y, Item->ItemData);
-				}
-				
 				for(int32 NearbyY = Y; NearbyY < Y + Item->ItemData->SizeY - 1; NearbyY++)
 				{
 					for(int32 NearbyX = X; NearbyX < X + Item->ItemData->SizeX - 1; NearbyX++)

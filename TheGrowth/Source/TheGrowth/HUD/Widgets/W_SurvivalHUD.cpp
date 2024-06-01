@@ -9,43 +9,42 @@
 #include "TheGrowth/Pawns/SurvivalCharacter.h"
 #include "TheGrowth/PlayerStates/SurvivalPlayerState.h"
 
-void UW_SurvivalHUD::NativeOnInitialized()
+void UW_SurvivalHUD::LateInitialize()
 {
-	Super::NativeOnInitialized();
-
 	if (ASurvivalPlayerState* OwningPlayerState = GetOwningPlayerState<ASurvivalPlayerState>())
 	{
 		OwningEntityComponent = OwningPlayerState->GetEntityComponent();
 	}
 }
 
+void UW_SurvivalHUD::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+}
+
 void UW_SurvivalHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
-
-	UpdateHealthText();
-}
-
-void UW_SurvivalHUD::UpdateHealthText()
-{
-	if (IsValid(OwningEntityComponent) == false)
-		return;
-
-	FString HealthString = FString::SanitizeFloat(OwningEntityComponent->GetCurrentHealth(), 0);
-	HealthString += '/';
-	HealthString += FString::SanitizeFloat(OwningEntityComponent->GetMaxHealth(), 0);
-	
-	HealthText->SetText(FText::FromString(HealthString));
 }
 
 void UW_SurvivalHUD::ToggleInventoryMenu()
 {
 	if (InventoryMenu->GetVisibility() == ESlateVisibility::Visible)
+	{
 		InventoryMenu->SetVisibility(ESlateVisibility::Collapsed);
+	}
 	else
 	{
 		InventoryMenu->SetVisibility(ESlateVisibility::Visible);
 		InventoryMenu->SetFocus();
+
+		if (APlayerController* OwningController = GetOwningPlayer())
+		{
+			int32 ViewportWidth{};
+			int32 ViewportHeight{};
+			OwningController->GetViewportSize(ViewportWidth, ViewportHeight);
+			OwningController->SetMouseLocation(ViewportWidth/2.0f, ViewportHeight/2.0f);
+		}
 	}
 }
 
