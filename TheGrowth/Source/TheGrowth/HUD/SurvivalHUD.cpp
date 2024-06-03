@@ -3,7 +3,9 @@
 #include "SurvivalHUD.h"
 
 #include "Blueprint/UserWidget.h"
+#include "TheGrowth/Pawns/SurvivalCharacter.h"
 #include "Widgets/W_SurvivalHUD.h"
+#include "Widgets/Inventory/W_Inventory.h"
 
 ASurvivalHUD::ASurvivalHUD()
 {
@@ -25,6 +27,14 @@ void ASurvivalHUD::BeginPlay()
 		return;
 
 	HUDWidget->AddToViewport();
+
+	if (APawn* PlayerPawn = GetOwningPawn())
+	{
+		if (ASurvivalCharacter* CastedPawn = Cast<ASurvivalCharacter>(PlayerPawn))
+		{
+			CastedPawn->SetGearWidgetRef(HUDWidget->InventoryMenu->Gear);
+		}
+	}
 }
 
 void ASurvivalHUD::LateInitialize()

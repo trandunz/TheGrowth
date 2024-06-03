@@ -1,7 +1,10 @@
 #include "W_InventorySlotCollection.h"
 
+#include "W_InventorySlot.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
+#include "TheGrowth/DataAssets/ItemData.h"
+#include "TheGrowth/Items/ItemBase.h"
 
 void UW_InventorySlotCollection::NativePreConstruct()
 {
@@ -13,11 +16,13 @@ void UW_InventorySlotCollection::NativePreConstruct()
 	if (Grid->GetSlots().Num() != SizeX * SizeY)
 	{
 		Grid->ClearChildren();
+		SlotWidgets.Empty();
 		for(int32 Y = 0; Y < SizeY; Y++)
 			for(int32 X = 0; X < SizeX; X++)
 			{
-				auto NewSlot = CreateWidget(Grid, SlotWidget);
-				auto GridSlot = Grid->AddChildToUniformGrid(NewSlot);
+				const auto NewSlot = CreateWidget(Grid, SlotWidget);
+				SlotWidgets.Add(Cast<UW_InventorySlot>(NewSlot));
+				const auto GridSlot = Grid->AddChildToUniformGrid(NewSlot);
 				GridSlot->SetColumn(X);
 				GridSlot->SetRow(Y);
 				GridSlot->SetHorizontalAlignment(HAlign_Fill);
@@ -68,4 +73,73 @@ void UW_InventorySlotCollection::DrawBorderOutline(const FGeometry& AllottedGeom
 	true,
 	2.0f
 	);
+}
+
+bool UW_InventorySlotCollection::CanFitItem(AItemBase* Item)
+{
+	for(int32 SlotY = 0; SlotY < SizeY; SlotY++)
+	{
+		for(int32 SlotX = 0; SlotX < SizeX; SlotX++)
+		{
+			// Horizontal
+			bool ItemCanFitHere{true};
+			for(int32 ItemY = 0; ItemY < Item->ItemData->SizeY; ItemY++)
+			{
+				for(int32 ItemX = 0; ItemX < Item->ItemData->SizeX; ItemX++)
+				{
+					if (ItemY + SlotY >= SizeY)
+					{
+						ItemCanFitHere = false;
+						continue;
+					}
+					if (ItemX + SlotX >= SizeX)
+					{
+						ItemCanFitHere = false;
+						continue;
+					}
+					int32 NewIndex = ((SlotY + ItemY) * SizeX) + (SlotX + ItemX);
+					if (SlotWidgets[NewIndex]->bOccupied)
+					{
+						ItemCanFitHere = false;
+						continue;
+					}
+				}
+			}
+			if (ItemCanFitHere)
+			{
+				return true;
+			}
+
+			// Vertical
+			ItemCanFitHere = true;
+			for(int32 ItemY = 0; ItemY < Item->ItemData->SizeY; ItemY++)
+			{
+				for(int32 ItemX = 0; ItemX < Item->ItemData->SizeX; ItemX++)
+				{
+					if (ItemX + SlotY >= SizeY)
+					{
+						ItemCanFitHere = false;
+						continue;
+					}
+					if (ItemY + SlotX >= SizeX)
+					{
+						ItemCanFitHere = false;
+						continue;
+					}
+					int32 NewIndex = ((SlotY + ItemX) * SizeX) + (SlotX + ItemY);
+					if (SlotWidgets[NewIndex]->bOccupied)
+					{
+						ItemCanFitHere = false;
+						continue;
+					}
+				}
+			}
+			if (ItemCanFitHere)
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
 }

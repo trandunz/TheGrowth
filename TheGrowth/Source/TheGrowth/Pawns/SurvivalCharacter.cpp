@@ -20,6 +20,7 @@
 #include "TheGrowth/HUD/SurvivalHUD.h"
 #include "TheGrowth/HUD/Widgets/W_SurvivalHUD.h"
 #include "TheGrowth/HUD/Widgets/Inventory/W_Inventory.h"
+#include "TheGrowth/HUD/Widgets/Inventory/Tabs/W_Gear.h"
 #include "TheGrowth/Interfaces/InteractInterface.h"
 #include "TheGrowth/Items/ItemBase.h"
 #include "TheGrowth/PlayerStates/SurvivalPlayerState.h"
@@ -102,7 +103,6 @@ void ASurvivalCharacter::BeginPlay()
 	if (IsValid(PlayerController))
 	{
 		HUDRef = PlayerController->GetHUD<ASurvivalHUD>();
-		Inventory->InventoryWidget = HUDRef->HUDWidget->InventoryMenu;
 		
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
@@ -451,6 +451,11 @@ void ASurvivalCharacter::ToggleInventoryWidget()
 	PlayerController->SetInputMode(FInputModeUIOnly{});
 }
 
+void ASurvivalCharacter::SetGearWidgetRef(UW_Gear* GearWidget)
+{
+	GearRef = GearWidget;
+}
+
 void ASurvivalCharacter::CheckForInteractables()
 {
 	FVector TraceStart = FollowCamera->GetComponentLocation();
@@ -513,6 +518,11 @@ void ASurvivalCharacter::PickupItem(AItemBase* Item)
 	if (IsValid(Item) == false)
 		return;
 
-	Inventory->AddItem(Item);
-	Item->Destroy();
+	if (IsValid(GearRef) == false)
+		return;
+
+	if (GearRef->CanPickupItem(Item))
+	{
+		Item->Destroy();
+	}
 }

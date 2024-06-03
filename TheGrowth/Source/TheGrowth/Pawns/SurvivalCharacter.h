@@ -15,6 +15,7 @@ class ASurvivalCharacter : public ACharacter
 	GENERATED_BODY()
 	friend class AItemBase;
 	friend class UW_SurvivalHUD;
+	friend class ASurvivalHUD;
 
 protected:
 	ASurvivalCharacter();
@@ -68,6 +69,8 @@ protected:
 
 	UFUNCTION()
 	void ToggleInventoryWidget();
+	UFUNCTION()
+	void SetGearWidgetRef(class UW_Gear* GearWidget);
 
 	UFUNCTION()
 	void CheckForInteractables();
@@ -132,6 +135,8 @@ protected: // References
 	class USurvivalMovementComponent* MovementComponent{nullptr};
 	UPROPERTY(BlueprintReadOnly, Category= References)
 	class ASurvivalHUD* HUDRef{nullptr};
+	UPROPERTY(BlueprintReadOnly, Category= References)
+	class UW_Gear* GearRef{nullptr};
 	
 protected: // Components //
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))

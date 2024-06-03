@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+
 #include "InventoryContainerData.generated.h"
 
 UCLASS()
@@ -13,5 +14,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	class UTexture2D* Icon{};
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TSubclassOf<UUserWidget> ContainerWidget{};
+	int32 TotalInventorySize{};
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<class UW_InventoryContainerLayout> ContainerLayout{};
 };

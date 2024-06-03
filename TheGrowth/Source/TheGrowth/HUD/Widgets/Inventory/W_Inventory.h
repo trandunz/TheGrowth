@@ -11,6 +11,7 @@ class THEGROWTH_API UW_Inventory : public UUserWidget
 {
 	GENERATED_BODY()
 	friend class UW_SurvivalHUD;
+	friend class ASurvivalHUD;
 	friend class UInventoryComponent;
 	friend class ASurvivalCharacter;
 	
