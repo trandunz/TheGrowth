@@ -23,6 +23,7 @@
 #include "TheGrowth/HUD/Widgets/Inventory/Tabs/W_Gear.h"
 #include "TheGrowth/Interfaces/InteractInterface.h"
 #include "TheGrowth/Items/ItemBase.h"
+#include "TheGrowth/Items/WeaponBase.h"
 #include "TheGrowth/PlayerStates/SurvivalPlayerState.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -45,7 +46,7 @@ ASurvivalCharacter::ASurvivalCharacter()
 	ZoomTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("ZoomTimeline"));
 	CameraResetTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("CameraResetTimeline"));
 
-	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+	AimTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("AimTimeline"));
 }
 
 void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -85,6 +86,10 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(LeanActionRight, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndLean, false);
 
 		EnhancedInputComponent->BindAction(ProneAction, ETriggerEvent::Started, this, &ASurvivalCharacter::Prone);
+
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ASurvivalCharacter::StartAim);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndAim);
+
 	}
 	else
 	{
@@ -128,8 +133,21 @@ void ASurvivalCharacter::BeginPlay()
 		CameraResetTimeline->SetTimelineFinishedFunc(CameraResetFinishedCallback);
 		CameraResetTimeline->SetPlayRate(1.0f / FMath::Clamp(CameraResetTime, 0.001f, 2.0f));
 	}
+	if (AimCurve)
+	{
+		FOnTimelineFloat CameraResetCallback;
+		CameraResetCallback.BindDynamic(this, &ASurvivalCharacter::UpdateAimTimeline);
+		AimTimeline->AddInterpFloat(AimCurve, CameraResetCallback);
+		AimTimeline->SetPlayRate(1.0f / FMath::Clamp(AimTime, 0.001f, 2.0f));
+	}
 
 	SetPerspective(true);
+
+	if (IsValid(TestWeaponPrefab))
+	{
+		ActiveWeaponRef = GetWorld()->SpawnActor<AWeaponBase>(TestWeaponPrefab);
+		ActiveWeaponRef->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponSocket_R"));
+	}
 }
 
 void ASurvivalCharacter::Tick(float DeltaSeconds)
@@ -195,10 +213,12 @@ void ASurvivalCharacter::Scroll(const FInputActionValue& Value)
 
 void ASurvivalCharacter::StartAim()
 {
+	AimTimeline->Play();
 }
 
 void ASurvivalCharacter::EndAim()
 {
+	AimTimeline->Reverse();
 }
 
 void ASurvivalCharacter::StartZoom()
@@ -312,6 +332,11 @@ void ASurvivalCharacter::OffsetHealth(float Amount)
 			SetRagdoll(true);
 		}
 	}
+}
+
+FTransform ASurvivalCharacter::GetLeftHandSocketTransform()
+{
+	return{};
 }
 
 void ASurvivalCharacter::UpdateBoomLength(float Increment)
@@ -525,4 +550,9 @@ void ASurvivalCharacter::PickupItem(AItemBase* Item)
 	{
 		Item->Destroy();
 	}
+}
+
+void ASurvivalCharacter::UpdateAimTimeline(float Delta)
+{
+	AimDelta = Delta;
 }

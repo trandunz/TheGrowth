@@ -49,6 +49,9 @@ public:
 	UFUNCTION()
 	void OffsetHealth(float Amount);
 
+	UFUNCTION(BlueprintCallable)
+	FTransform GetLeftHandSocketTransform();
+
 protected:
 	UFUNCTION()
 	void UpdateBoomLength(float Increment);
@@ -80,10 +83,25 @@ protected:
 	UFUNCTION()
 	void PickupItem(class AItemBase* Item);
 
+	UFUNCTION()
+	void UpdateAimTimeline(float Delta);
+	
+
 protected: // Interaction
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Interaction, meta = (AllowPrivateAccess = "true"))
 	float InteractRange{200.0f};
 	class IInteractInterface* LastInteractable{};
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category= Firearms)
+	float AimDelta{};
+	UPROPERTY(BlueprintReadOnly, Category= Firearms)
+	float AimTime{0.2f};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Firearms, meta = (AllowPrivateAccess = "true"))
+	UCurveFloat* AimCurve{nullptr};
+	//TEMP
+	UPROPERTY(EditDefaultsOnly, Category= Firearms)
+	TSubclassOf<class AWeaponBase> TestWeaponPrefab{};
 	
 protected: // Movement Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Movement, meta = (AllowPrivateAccess = "true"))
@@ -125,7 +143,6 @@ protected: // Camera Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
 	float CameraResetTime{0.2f};
 	
-	
 protected: // References
 	UPROPERTY(BlueprintReadOnly, Category= References)
 	class APlayerController* PlayerController{nullptr};
@@ -137,6 +154,8 @@ protected: // References
 	class ASurvivalHUD* HUDRef{nullptr};
 	UPROPERTY(BlueprintReadOnly, Category= References)
 	class UW_Gear* GearRef{nullptr};
+	UPROPERTY(BlueprintReadOnly, Category= References)
+	class AWeaponBase* ActiveWeaponRef{nullptr};
 	
 protected: // Components //
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))
@@ -148,7 +167,8 @@ protected: // Components //
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
 	class UTimelineComponent* CameraResetTimeline{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
-	class UInventoryComponent* Inventory{nullptr};
+	class UTimelineComponent* AimTimeline{nullptr};
+	
 
 protected: // Input //
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
