@@ -47,12 +47,14 @@ ASurvivalCharacter::ASurvivalCharacter()
 	CameraResetTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("CameraResetTimeline"));
 
 	AimTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("AimTimeline"));
+
+	RHand_IK = CreateDefaultSubobject<USceneComponent>(TEXT("RHand_IK"));
+	RHand_IK->SetupAttachment(GetMesh(), FName("Head"));
+	RHand_IK_DefaultTransform = RHand_IK->GetRelativeTransform();
 }
 
 void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-
-	
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
@@ -135,9 +137,12 @@ void ASurvivalCharacter::BeginPlay()
 	}
 	if (AimCurve)
 	{
-		FOnTimelineFloat CameraResetCallback;
-		CameraResetCallback.BindDynamic(this, &ASurvivalCharacter::UpdateAimTimeline);
-		AimTimeline->AddInterpFloat(AimCurve, CameraResetCallback);
+		FOnTimelineFloat AimCallback;
+		AimCallback.BindDynamic(this, &ASurvivalCharacter::UpdateAimTimeline);
+		FOnTimelineEvent AimFinishedCallback;
+		AimFinishedCallback.BindDynamic(this, &ASurvivalCharacter::OnAimTimelineFinished);
+		AimTimeline->AddInterpFloat(AimCurve, AimCallback);
+		CameraResetTimeline->SetTimelineFinishedFunc(AimFinishedCallback);
 		AimTimeline->SetPlayRate(1.0f / FMath::Clamp(AimTime, 0.001f, 2.0f));
 	}
 
@@ -146,7 +151,7 @@ void ASurvivalCharacter::BeginPlay()
 	if (IsValid(TestWeaponPrefab))
 	{
 		ActiveWeaponRef = GetWorld()->SpawnActor<AWeaponBase>(TestWeaponPrefab);
-		ActiveWeaponRef->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("WeaponSocket_R"));
+		ActiveWeaponRef->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("S_Firearm"));
 	}
 }
 
@@ -213,6 +218,7 @@ void ASurvivalCharacter::Scroll(const FInputActionValue& Value)
 
 void ASurvivalCharacter::StartAim()
 {
+	UpdateRHandIK();
 	AimTimeline->Play();
 }
 
@@ -366,9 +372,7 @@ void ASurvivalCharacter::SetPerspective(bool FirstPerson)
 	bFirstPerson = FirstPerson;
 	if (FirstPerson)
 	{
-		FollowCamera->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("Head"));
-		FollowCamera->SetRelativeRotation({0.000000,90.000000,-90.000000});
-		FollowCamera->SetRelativeLocation({0.0f, 10.0f, 0.0f});
+		FollowCamera->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("S_Camera"));
 
 		CameraBoom->TargetArmLength = MinBoomLength;
 		
@@ -555,4 +559,22 @@ void ASurvivalCharacter::PickupItem(AItemBase* Item)
 void ASurvivalCharacter::UpdateAimTimeline(float Delta)
 {
 	AimDelta = Delta;
+}
+
+void ASurvivalCharacter::OnAimTimelineFinished()
+{
+	RHand_IK->SetRelativeTransform(RHand_IK_DefaultTransform);
+}
+
+void ASurvivalCharacter::UpdateRHandIK()
+{
+	if (IsValid(ActiveWeaponRef) == false)
+		return;
+	
+	auto RightHandTransform = GetMesh()->GetSocketTransform(FName("hand_r"));
+	auto AimTransform = ActiveWeaponRef->MeshComponent->GetSocketTransform(FName("AimPosition"));
+	auto RelativeTransform = UKismetMathLibrary::MakeRelativeTransform(AimTransform, RightHandTransform);
+	
+	RHand_IK->SetRelativeLocation(RHand_IK->GetRelativeLocation() - FVector{RelativeTransform.GetLocation().X, RelativeTransform.GetLocation().Y, RelativeTransform.GetLocation().Z});
+	RHand_IK->SetRelativeRotation(RelativeTransform.GetRotation());
 }

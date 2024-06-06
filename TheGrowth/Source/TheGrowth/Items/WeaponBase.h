@@ -8,6 +8,7 @@ UCLASS()
 class THEGROWTH_API AWeaponBase : public AActor
 {
 	GENERATED_BODY()
+	friend class ASurvivalCharacter;
 	
 	AWeaponBase();
 

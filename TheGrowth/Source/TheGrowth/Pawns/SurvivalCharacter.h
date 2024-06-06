@@ -85,6 +85,12 @@ protected:
 
 	UFUNCTION()
 	void UpdateAimTimeline(float Delta);
+
+	UFUNCTION()
+	void OnAimTimelineFinished();
+
+	UFUNCTION()
+	void UpdateRHandIK();
 	
 
 protected: // Interaction
@@ -99,6 +105,9 @@ protected:
 	float AimTime{0.2f};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Firearms, meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* AimCurve{nullptr};
+	UPROPERTY(BlueprintReadOnly, Category= Firearms)
+	FTransform RHand_IK_DefaultTransform{};
+	
 	//TEMP
 	UPROPERTY(EditDefaultsOnly, Category= Firearms)
 	TSubclassOf<class AWeaponBase> TestWeaponPrefab{};
@@ -168,6 +177,8 @@ protected: // Components //
 	class UTimelineComponent* CameraResetTimeline{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
 	class UTimelineComponent* AimTimeline{nullptr};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
+    class USceneComponent* RHand_IK{nullptr};
 	
 
 protected: // Input //
