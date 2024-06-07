@@ -107,6 +107,8 @@ void ASurvivalCharacter::BeginPlay()
 	PlayerStateRef = GetPlayerState<ASurvivalPlayerState>();
 	MovementComponent = GetCharacterMovement<USurvivalMovementComponent>();
 	
+	MovementComponent->bOrientRotationToMovement = false;
+	
 	if (IsValid(PlayerController))
 	{
 		HUDRef = PlayerController->GetHUD<ASurvivalHUD>();
@@ -142,7 +144,7 @@ void ASurvivalCharacter::BeginPlay()
 		FOnTimelineEvent AimFinishedCallback;
 		AimFinishedCallback.BindDynamic(this, &ASurvivalCharacter::OnAimTimelineFinished);
 		AimTimeline->AddInterpFloat(AimCurve, AimCallback);
-		CameraResetTimeline->SetTimelineFinishedFunc(AimFinishedCallback);
+		AimTimeline->SetTimelineFinishedFunc(AimFinishedCallback);
 		AimTimeline->SetPlayRate(1.0f / FMath::Clamp(AimTime, 0.001f, 2.0f));
 	}
 
@@ -150,9 +152,12 @@ void ASurvivalCharacter::BeginPlay()
 
 	if (IsValid(TestWeaponPrefab))
 	{
-		ActiveWeaponRef = GetWorld()->SpawnActor<AWeaponBase>(TestWeaponPrefab);
-		ActiveWeaponRef->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("S_Firearm"));
+		auto NewWeapon = GetWorld()->SpawnActor<AWeaponBase>(TestWeaponPrefab);
+		NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("S_Firearm"));
+		ActiveWeaponRef = NewWeapon;
 	}
+
+	FSlateApplication::Get().OnApplicationActivationStateChanged().AddUObject( this, &ASurvivalCharacter::OnWindowFocusChanged );
 }
 
 void ASurvivalCharacter::Tick(float DeltaSeconds)
@@ -244,7 +249,6 @@ void ASurvivalCharacter::StartFreeLook()
 	CameraResetTimeline->Stop();
 	
 	bUseControllerRotationYaw = false;
-	MovementComponent->bOrientRotationToMovement = false;
 }
 
 void ASurvivalCharacter::EndFreeLook()
@@ -345,6 +349,16 @@ FTransform ASurvivalCharacter::GetLeftHandSocketTransform()
 	return{};
 }
 
+void ASurvivalCharacter::OnWindowFocusChanged(bool bIsFocused)
+{
+	if (bIsFocused == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Window Lost Focus") );
+		//EndFreeLook();
+	}
+		
+}
+
 void ASurvivalCharacter::UpdateBoomLength(float Increment)
 {
 	float NewArmLength = CameraBoom->TargetArmLength + Increment;
@@ -438,8 +452,8 @@ void ASurvivalCharacter::UpdateCameraResetTimeline(float Delta)
 
 void ASurvivalCharacter::OnCameraResetTimelineFinish()
 {
-	MovementComponent->bOrientRotationToMovement = true;
 	bUseControllerRotationYaw = true;
+	UE_LOG(LogTemp, Warning, TEXT("Reset Camera Complete") );
 }
 
 void ASurvivalCharacter::UpdateLeanAngle(float DeltaSeconds)
@@ -563,7 +577,7 @@ void ASurvivalCharacter::UpdateAimTimeline(float Delta)
 
 void ASurvivalCharacter::OnAimTimelineFinished()
 {
-	RHand_IK->SetRelativeTransform(RHand_IK_DefaultTransform);
+	UE_LOG(LogTemp, Warning, TEXT("Aim Finished") );
 }
 
 void ASurvivalCharacter::UpdateRHandIK()

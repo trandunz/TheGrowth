@@ -52,6 +52,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FTransform GetLeftHandSocketTransform();
 
+	UFUNCTION()
+	void OnWindowFocusChanged(bool bIsFocused);
+
 protected:
 	UFUNCTION()
 	void UpdateBoomLength(float Increment);
