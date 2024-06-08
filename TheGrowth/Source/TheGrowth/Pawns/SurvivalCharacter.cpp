@@ -1,6 +1,8 @@
 // Copyright William Inman. All Rights Reserved.
 
 #include "SurvivalCharacter.h"
+
+#include "DummySurvivalCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -47,10 +49,6 @@ ASurvivalCharacter::ASurvivalCharacter()
 	CameraResetTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("CameraResetTimeline"));
 
 	AimTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("AimTimeline"));
-
-	RHand_IK = CreateDefaultSubobject<USceneComponent>(TEXT("RHand_IK"));
-	RHand_IK->SetupAttachment(GetMesh(), FName("Head"));
-	RHand_IK_DefaultTransform = RHand_IK->GetRelativeTransform();
 }
 
 void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -158,6 +156,13 @@ void ASurvivalCharacter::BeginPlay()
 	}
 
 	FSlateApplication::Get().OnApplicationActivationStateChanged().AddUObject( this, &ASurvivalCharacter::OnWindowFocusChanged );
+
+	if (IsValid(DummyCharacterPrefab))
+	{
+		DummyCharacter = GetWorld()->SpawnActor<ADummySurvivalCharacter>(DummyCharacterPrefab);
+		DummyCharacter->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	}
+
 }
 
 void ASurvivalCharacter::Tick(float DeltaSeconds)
@@ -588,7 +593,4 @@ void ASurvivalCharacter::UpdateRHandIK()
 	auto RightHandTransform = GetMesh()->GetSocketTransform(FName("hand_r"));
 	auto AimTransform = ActiveWeaponRef->MeshComponent->GetSocketTransform(FName("AimPosition"));
 	auto RelativeTransform = UKismetMathLibrary::MakeRelativeTransform(AimTransform, RightHandTransform);
-	
-	RHand_IK->SetRelativeLocation(RHand_IK->GetRelativeLocation() - FVector{RelativeTransform.GetLocation().X, RelativeTransform.GetLocation().Y, RelativeTransform.GetLocation().Z});
-	RHand_IK->SetRelativeRotation(RelativeTransform.GetRotation());
 }

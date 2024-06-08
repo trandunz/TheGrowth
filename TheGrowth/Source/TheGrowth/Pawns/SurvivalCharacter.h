@@ -101,6 +101,9 @@ protected: // Interaction
 	float InteractRange{200.0f};
 	class IInteractInterface* LastInteractable{};
 
+protected: // UI
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= UI, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<class ADummySurvivalCharacter> DummyCharacterPrefab{nullptr};
 protected:
 	UPROPERTY(BlueprintReadOnly, Category= Firearms)
 	float AimDelta{};
@@ -181,7 +184,7 @@ protected: // Components //
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
 	class UTimelineComponent* AimTimeline{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
-    class USceneComponent* RHand_IK{nullptr};
+    class ADummySurvivalCharacter* DummyCharacter{nullptr};
 	
 
 protected: // Input //
