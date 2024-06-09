@@ -19,3 +19,8 @@ ADummySurvivalCharacter::ADummySurvivalCharacter()
 	CaptureComponent->ShowOnlyComponent(Mesh);
 }
 
+void ADummySurvivalCharacter::RotateZ(float Amount)
+{
+	SpringArm->SetRelativeRotation(SpringArm->GetRelativeRotation() + FRotator{0,Amount,0});
+}
+

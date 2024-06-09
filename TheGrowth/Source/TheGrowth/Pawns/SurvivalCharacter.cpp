@@ -163,6 +163,11 @@ void ASurvivalCharacter::BeginPlay()
 		DummyCharacter->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	}
 
+	if (IsValid(HUDRef))
+	{
+		if (IsValid(HUDRef->HUDWidget))
+			HUDRef->HUDWidget->SetPreviewDummyCharacterReference(DummyCharacter);
+	}
 }
 
 void ASurvivalCharacter::Tick(float DeltaSeconds)

@@ -19,6 +19,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void SetSelectedWidgetIndex(int32 Index);
 	
+	UFUNCTION()
+	void SetPreviewDummyCharacterReference(class ADummySurvivalCharacter* DummyCharacter);
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
 	class UW_Overall* Overall{};

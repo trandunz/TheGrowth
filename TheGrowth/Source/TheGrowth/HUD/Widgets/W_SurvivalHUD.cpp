@@ -52,3 +52,8 @@ void UW_SurvivalHUD::SetCrosshairVisible(bool Visible)
 {
 	Crosshair->SetVisibility(Visible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 }
+
+void UW_SurvivalHUD::SetPreviewDummyCharacterReference(ADummySurvivalCharacter* DummyCharacter)
+{
+	InventoryMenu->SetPreviewDummyCharacterReference(DummyCharacter);
+}

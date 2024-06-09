@@ -24,6 +24,9 @@ protected:
 	
 	UFUNCTION()
 	void SetCrosshairVisible(bool Visible);
+
+	UFUNCTION()
+	void SetPreviewDummyCharacterReference(class ADummySurvivalCharacter* DummyCharacter);
 	
 protected: // References //
 	UPROPERTY(VisibleAnywhere, Category= References)

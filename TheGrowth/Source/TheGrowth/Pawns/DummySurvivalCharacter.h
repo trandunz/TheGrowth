@@ -11,6 +11,14 @@ class THEGROWTH_API ADummySurvivalCharacter : public AActor
 	
 	ADummySurvivalCharacter();
 
+public:
+	UFUNCTION()
+	void RotateZ(float Amount);
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float RotationStartZ{};
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class USceneComponent* Root{nullptr};
