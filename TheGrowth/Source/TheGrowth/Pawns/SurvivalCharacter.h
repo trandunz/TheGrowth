@@ -93,7 +93,10 @@ protected:
 	void OnAimTimelineFinished();
 
 	UFUNCTION()
-	void UpdateRHandIK();
+	void Attack();
+
+	UFUNCTION()
+	void Reload();
 	
 
 protected: // Interaction
@@ -111,8 +114,6 @@ protected:
 	float AimTime{0.2f};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Firearms, meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* AimCurve{nullptr};
-	UPROPERTY(BlueprintReadOnly, Category= Firearms)
-	FTransform RHand_IK_DefaultTransform{};
 	
 	//TEMP
 	UPROPERTY(EditDefaultsOnly, Category= Firearms)
@@ -185,7 +186,8 @@ protected: // Components //
 	class UTimelineComponent* AimTimeline{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
     class ADummySurvivalCharacter* DummyCharacter{nullptr};
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= Components, meta = (AllowPrivateAccess = "true"))
+	class UInventoryComponent* InventoryComponent{nullptr};
 
 protected: // Input //
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -213,6 +215,10 @@ protected: // Input //
 	class UInputAction* CrouchAction{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ProneAction{nullptr};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* AttackAction{nullptr};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ReloadAction{nullptr};
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LeanActionLeft{nullptr};

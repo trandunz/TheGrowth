@@ -2,23 +2,25 @@
 
 #include "ItemBase.h"
 
+#include "TheGrowth/Components/ItemComponent.h"
 #include "TheGrowth/Pawns/SurvivalCharacter.h"
 
 AItemBase::AItemBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh (Root)"));
-	SetRootComponent(Mesh);
+	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh (Root)"));
+	SetRootComponent(MeshComponent);
+	MeshComponent->SetCollisionProfileName(FName("PhysicsActor"));
 
-	Mesh->SetCollisionProfileName(FName("PhysicsActor"));
+	ItemComponent = CreateDefaultSubobject<UItemComponent>(TEXT("Item Component"));
 }
 
 void AItemBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Mesh->SetSimulatePhysics(true);
+	TogglePhysics(true);
 }
 
 void AItemBase::Tick(float DeltaTime)
@@ -32,6 +34,25 @@ void AItemBase::Interact(class ASurvivalCharacter* Character)
 	if (IsValid(Character) == false)
 		return;
 
+	TogglePhysics(false);
+	
 	Character->PickupItem(this);
+}
+
+void AItemBase::TogglePhysics(bool Enabled)
+{
+	if (IsValid(MeshComponent) == false)
+		return;
+	
+	if (Enabled)
+	{
+		MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		MeshComponent->SetSimulatePhysics(true);
+	}
+	else
+	{
+		MeshComponent->SetSimulatePhysics(false);
+		MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 }
 

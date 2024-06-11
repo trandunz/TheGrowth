@@ -1,5 +1,6 @@
 #include "W_Gear.h"
 
+#include "TheGrowth/Components/ItemComponent.h"
 #include "TheGrowth/DataAssets/InventoryContainerData.h"
 #include "TheGrowth/DataAssets/ItemData.h"
 #include "TheGrowth/HUD/Widgets/Inventory/W_InventoryContainer.h"
@@ -38,7 +39,7 @@ bool UW_Gear::CanPickupItem(AItemBase* Item)
 	// Generic Item
 	for(auto Container : Containers)
 	{
-		if (Container->SlotType == Item->ItemData->ItemType)
+		if (Container->SlotType == Item->ItemComponent->ItemData->ItemType)
 		{
 			if (Container->bOccupied == false)
 				return true;

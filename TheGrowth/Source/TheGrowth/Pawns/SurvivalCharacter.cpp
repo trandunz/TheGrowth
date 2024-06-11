@@ -18,7 +18,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "TheGrowth/Components/InventoryComponent.h"
+#include "TheGrowth/Components/ItemComponent.h"
 #include "TheGrowth/Components/SurvivalMovementComponent.h"
+#include "TheGrowth/DataAssets/ItemData.h"
 #include "TheGrowth/HUD/SurvivalHUD.h"
 #include "TheGrowth/HUD/Widgets/W_SurvivalHUD.h"
 #include "TheGrowth/HUD/Widgets/Inventory/W_Inventory.h"
@@ -49,6 +51,8 @@ ASurvivalCharacter::ASurvivalCharacter()
 	CameraResetTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("CameraResetTimeline"));
 
 	AimTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("AimTimeline"));
+
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory Component"));
 }
 
 void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -90,6 +94,9 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ASurvivalCharacter::StartAim);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndAim);
 
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ASurvivalCharacter::Attack);
+
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &ASurvivalCharacter::Reload);
 	}
 	else
 	{
@@ -151,6 +158,7 @@ void ASurvivalCharacter::BeginPlay()
 	if (IsValid(TestWeaponPrefab))
 	{
 		auto NewWeapon = GetWorld()->SpawnActor<AWeaponBase>(TestWeaponPrefab);
+		NewWeapon->TogglePhysics(false);
 		NewWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("S_Firearm"));
 		ActiveWeaponRef = NewWeapon;
 	}
@@ -233,7 +241,6 @@ void ASurvivalCharacter::Scroll(const FInputActionValue& Value)
 
 void ASurvivalCharacter::StartAim()
 {
-	UpdateRHandIK();
 	AimTimeline->Play();
 }
 
@@ -571,13 +578,8 @@ void ASurvivalCharacter::PickupItem(AItemBase* Item)
 	if (IsValid(Item) == false)
 		return;
 
-	if (IsValid(GearRef) == false)
-		return;
-
-	if (GearRef->CanPickupItem(Item))
-	{
-		Item->Destroy();
-	}
+	InventoryComponent->AddItem(Item);
+	Item->Destroy();
 }
 
 void ASurvivalCharacter::UpdateAimTimeline(float Delta)
@@ -590,12 +592,30 @@ void ASurvivalCharacter::OnAimTimelineFinished()
 	UE_LOG(LogTemp, Warning, TEXT("Aim Finished") );
 }
 
-void ASurvivalCharacter::UpdateRHandIK()
+void ASurvivalCharacter::Attack()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Attempted To Fire Gun") );
+	
+	if (IsValid(ActiveWeaponRef) == false)
+		return;
+
+	ActiveWeaponRef->Discharge();
+}
+
+void ASurvivalCharacter::Reload()
 {
 	if (IsValid(ActiveWeaponRef) == false)
 		return;
-	
-	auto RightHandTransform = GetMesh()->GetSocketTransform(FName("hand_r"));
-	auto AimTransform = ActiveWeaponRef->MeshComponent->GetSocketTransform(FName("AimPosition"));
-	auto RelativeTransform = UKismetMathLibrary::MakeRelativeTransform(AimTransform, RightHandTransform);
+
+	for(FItemStruct Item : InventoryComponent->Inventory)
+	{
+		if (Item.ItemData->ItemType == Magazine)
+		{
+			if (ActiveWeaponRef->CanFitMagazine(Item.ItemData))
+			{
+				ActiveWeaponRef->Reload(Item);
+				break;
+			}
+		}
+	}
 }

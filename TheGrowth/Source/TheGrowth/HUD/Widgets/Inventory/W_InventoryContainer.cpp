@@ -5,6 +5,7 @@
 #include "W_InventorySlotCollection.h"
 #include "Components/Image.h"
 #include "Components/NamedSlot.h"
+#include "TheGrowth/Components/ItemComponent.h"
 #include "TheGrowth/DataAssets/InventoryContainerData.h"
 #include "TheGrowth/DataAssets/ItemData.h"
 #include "TheGrowth/Items/ItemBase.h"
@@ -52,7 +53,7 @@ bool UW_InventoryContainer::CanFitItem(AItemBase* Item)
 	if (IsValid(LayoutWidget) == false)
 		return false;
 	
-	if (Item->ItemData->SizeY * Item->ItemData->SizeX > ContainerData->TotalInventorySize)
+	if (Item->ItemComponent->ItemData->SizeY * Item->ItemComponent->ItemData->SizeX > ContainerData->TotalInventorySize)
 		return false;
 
 	bool CanFitItem{true};

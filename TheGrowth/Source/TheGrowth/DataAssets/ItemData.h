@@ -10,6 +10,7 @@ UENUM()
 enum EItemType
 {
 	Generic,
+	Magazine,
 	
 	Melee,
 	Firearm,
@@ -27,6 +28,16 @@ enum EItemType
 	Pouch,
 };
 
+USTRUCT(BlueprintType)
+struct FItemStruct
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UItemData* ItemData{};
+	TArray<FItemStruct> Inventory{};
+};
+
 UCLASS()
 class THEGROWTH_API UItemData : public UDataAsset
 {
@@ -35,6 +46,8 @@ class THEGROWTH_API UItemData : public UDataAsset
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TEnumAsByte<EItemType> ItemType{Generic};
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<AActor> AssociatedActor{};
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	class UTexture2D* Icon{};
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

@@ -24,11 +24,14 @@ protected:
 protected:
 	virtual void Interact(class ASurvivalCharacter* Character) override;
 
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= Item, meta = (AllowPrivateAccess = "true"))
-	class UItemData* ItemData{};
-
+public:
+	UFUNCTION()
+	void TogglePhysics(bool Enabled);
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (AllowPrivateAccess = "true"))
-	class UStaticMeshComponent* Mesh{};
+	class USkeletalMeshComponent* MeshComponent{nullptr};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (AllowPrivateAccess = "true"))
+	class UItemComponent* ItemComponent{nullptr};
 };

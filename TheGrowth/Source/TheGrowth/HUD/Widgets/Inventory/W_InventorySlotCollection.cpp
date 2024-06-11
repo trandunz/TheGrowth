@@ -3,6 +3,7 @@
 #include "W_InventorySlot.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
+#include "TheGrowth/Components/ItemComponent.h"
 #include "TheGrowth/DataAssets/ItemData.h"
 #include "TheGrowth/Items/ItemBase.h"
 
@@ -83,9 +84,9 @@ bool UW_InventorySlotCollection::CanFitItem(AItemBase* Item)
 		{
 			// Horizontal
 			bool ItemCanFitHere{true};
-			for(int32 ItemY = 0; ItemY < Item->ItemData->SizeY; ItemY++)
+			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeY; ItemY++)
 			{
-				for(int32 ItemX = 0; ItemX < Item->ItemData->SizeX; ItemX++)
+				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeX; ItemX++)
 				{
 					if (ItemY + SlotY >= SizeY)
 					{
@@ -112,9 +113,9 @@ bool UW_InventorySlotCollection::CanFitItem(AItemBase* Item)
 
 			// Vertical
 			ItemCanFitHere = true;
-			for(int32 ItemY = 0; ItemY < Item->ItemData->SizeY; ItemY++)
+			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeY; ItemY++)
 			{
-				for(int32 ItemX = 0; ItemX < Item->ItemData->SizeX; ItemX++)
+				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeX; ItemX++)
 				{
 					if (ItemX + SlotY >= SizeY)
 					{
