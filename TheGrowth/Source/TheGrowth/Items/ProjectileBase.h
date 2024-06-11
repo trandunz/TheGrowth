@@ -20,18 +20,13 @@ protected:
 	void SetDirectionOfMotion(FVector NewDirection);
 
 protected:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	bool EnableDrawDebugLine{false};
-	
 	UPROPERTY(EditAnywhere)
-	float TravelSpeed{20000.0f};
+	float TravelSpeed{86600.0f};
 	float BulletTime{0.0f};
-	UPROPERTY(BlueprintReadOnly)
-	FRotator BulletAngle;
 	UPROPERTY(Replicated)
 	FVector Velocity;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	float Gravity = -50.0f;
+	float Gravity = -981.0f;
 	float RotationPitch;
 	UPROPERTY(EditDefaultsOnly)
 	float BulletLifetime = 30.0f;
@@ -39,13 +34,23 @@ protected:
 	UPROPERTY(EditAnywhere)
 	int Damage{35};
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bDrawDebugTracer{true};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DebugTracerWidth{0.5f};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DebugTracerLifetime{1.0f};
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<AActor*> ActorsToIngore{};
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	class UParticleSystem* BulletImpactVFX{nullptr};
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UArrowComponent* ArrowComponent{nullptr};
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	class UStaticMeshComponent* Mesh{nullptr};
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	class UParticleSystemComponent* TracerParticleSystem{nullptr};
 };

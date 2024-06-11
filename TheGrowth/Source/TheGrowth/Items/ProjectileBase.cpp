@@ -1,6 +1,8 @@
 #include "ProjectileBase.h"
 
+#include "NiagaraComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 
 AProjectileBase::AProjectileBase()
@@ -11,13 +13,9 @@ AProjectileBase::AProjectileBase()
 	SetRootComponent(ArrowComponent);
 	
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	Mesh->AttachToComponent(ArrowComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	Mesh->SetupAttachment(ArrowComponent);
 	Mesh->SetRelativeRotation({0, -90.0f, 0.0f});
-	Mesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-
-	TracerParticleSystem = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Tracer Particle System"));
-	TracerParticleSystem->AttachToComponent(ArrowComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-	TracerParticleSystem->SetWorldRotation(FRotator{});
+	Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	bReplicates = true;
 	SetReplicatingMovement(true);
@@ -36,10 +34,6 @@ void AProjectileBase::BeginPlay()
 	
 	SetReplicateMovement(true);
 	ForceNetRelevant();
-	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Ignore);
-	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_EngineTraceChannel2, ECR_Ignore);
-	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECR_Ignore);
-	Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECR_Ignore);
 }
 
 void AProjectileBase::Tick(float DeltaTime)
@@ -50,29 +44,33 @@ void AProjectileBase::Tick(float DeltaTime)
 	{
 		if (Velocity.Length() > 10.0f)
 		{
-			TracerParticleSystem->Activate(true);
-		
 			FHitResult hitResult;
 			FVector StartLineTrace = GetActorLocation();
 			FVector EndLineTrace = (Velocity * DeltaTime) + StartLineTrace;
 			FVector ForwardVector = EndLineTrace - StartLineTrace;	
-			BulletAngle = FRotator(0.f, 0.0f, ForwardVector.Rotation().Pitch - GetActorRotation().Pitch);
-			SetActorRotation(BulletAngle);
+			SetActorRotation(ForwardVector.Rotation());
+
+			if (bDrawDebugTracer)
+				DrawDebugLine(GetWorld(), StartLineTrace, EndLineTrace, FColor::Purple, false, DebugTracerLifetime, 0, DebugTracerWidth);
 	
 			FCollisionQueryParams CollisionParams;
 			CollisionParams.AddIgnoredActor(this);
  
 			RotationPitch = GetActorRotation().Pitch * -1;
-	
-			if(EnableDrawDebugLine)
-				DrawDebugLine(GetWorld(), StartLineTrace, EndLineTrace, FColor(0, 200.0f, 100.0f), true);
-	
-			if(GetWorld()->LineTraceSingleByChannel(hitResult, StartLineTrace, EndLineTrace, ECC_EngineTraceChannel2))
+
+			FCollisionQueryParams Params{};
+			Params.AddIgnoredActors(ActorsToIngore);
+			if(GetWorld()->LineTraceSingleByChannel(hitResult, StartLineTrace, EndLineTrace, ECC_WorldDynamic, Params))
 			{
 				if (auto hitActor = hitResult.GetActor())
 				{
-					UE_LOG(LogTemp, Display, TEXT("Bullet Hit Something!"));
+					UE_LOG(LogTemp, Display, TEXT("Bullet Hit %s!"), *hitActor->GetName());
+					
 				}
+
+				if (IsValid(BulletImpactVFX))
+					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BulletImpactVFX, hitResult.Location, hitResult.Normal.Rotation());
+
 				Destroy();
 			}
 	
@@ -87,11 +85,11 @@ void AProjectileBase::Tick(float DeltaTime)
 			if(BulletTime > BulletLifetime)
 			{
 				Destroy();
+				
 			}
 		}
 		else
 		{
-			TracerParticleSystem->Deactivate();
 			Mesh->SetCollisionProfileName("PhysicsActor");
 			Mesh->SetSimulatePhysics(true);
 		}

@@ -15,3 +15,12 @@ void UInventoryComponent::AddItem(AItemBase* Item)
 	
 	Inventory.Add({Item->ItemComponent->ItemData, Item->ItemComponent->Inventory});
 }
+
+void UInventoryComponent::AddItem(FItemStruct& Item)
+{
+	if (IsValid(Item.ItemData) == false)
+		return;
+
+	if (Inventory.Num() < MaxInventorySize)
+		Inventory.Add(Item);
+}

@@ -23,10 +23,9 @@ void AItemBase::BeginPlay()
 	TogglePhysics(true);
 }
 
-void AItemBase::Tick(float DeltaTime)
+void AItemBase::Tick(float DeltaSeconds)
 {
-	Super::Tick(DeltaTime);
-
+	Super::Tick(DeltaSeconds);
 }
 
 void AItemBase::Interact(class ASurvivalCharacter* Character)

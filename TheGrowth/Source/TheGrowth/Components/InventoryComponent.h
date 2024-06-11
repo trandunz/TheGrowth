@@ -14,13 +14,18 @@ class THEGROWTH_API UInventoryComponent : public UActorComponent
 	friend class ASurvivalCharacter;
 	friend class UW_Inventory;
 	friend class AWeaponBase;
+	friend class AMagazineBase;
 
 protected:
-	UFUNCTION()
+	
 	void AddItem(class AItemBase* Item);
+	void AddItem(FItemStruct& Item);
 
 protected:
 	UPROPERTY(EditAnywhere, Category= Inventory, meta = (AllowPrivateAccess = "true"))
 	TArray<FItemStruct> Inventory{};
+
+	UPROPERTY(EditAnywhere, Category= Inventory, meta = (AllowPrivateAccess = "true"))
+	int32 MaxInventorySize{9999};
 
 };

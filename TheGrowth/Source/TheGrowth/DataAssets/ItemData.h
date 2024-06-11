@@ -33,9 +33,15 @@ struct FItemStruct
 {
 	GENERATED_BODY()
 
+	bool AddItemToInventory(FItemStruct& Item);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UItemData* ItemData{};
+	
 	TArray<FItemStruct> Inventory{};
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MaxInventorySize{9999};
 };
 
 UCLASS()

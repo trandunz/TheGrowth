@@ -94,7 +94,7 @@ void ASurvivalCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &ASurvivalCharacter::StartAim);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &ASurvivalCharacter::EndAim);
 
-		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ASurvivalCharacter::Attack);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &ASurvivalCharacter::Attack);
 
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &ASurvivalCharacter::Reload);
 	}
@@ -594,8 +594,6 @@ void ASurvivalCharacter::OnAimTimelineFinished()
 
 void ASurvivalCharacter::Attack()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Attempted To Fire Gun") );
-	
 	if (IsValid(ActiveWeaponRef) == false)
 		return;
 

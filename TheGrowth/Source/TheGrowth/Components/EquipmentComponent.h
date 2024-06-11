@@ -11,6 +11,7 @@
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class THEGROWTH_API UEquipmentComponent : public UActorComponent
 {
+	friend class AWeaponBase;
 	GENERATED_BODY()
 
 	UEquipmentComponent();

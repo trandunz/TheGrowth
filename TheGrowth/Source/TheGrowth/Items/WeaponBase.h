@@ -5,6 +5,9 @@
 #include "GameFramework/Actor.h"
 #include "WeaponBase.generated.h"
 
+#define CHAMBER_SLOT_ID "Chamber"
+#define MAGAZINE_SLOT_ID "Magazine"
+
 UCLASS()
 class THEGROWTH_API AWeaponBase : public AItemBase
 {
@@ -12,6 +15,9 @@ class THEGROWTH_API AWeaponBase : public AItemBase
 	friend class ASurvivalCharacter;
 	
 	AWeaponBase();
+	
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 
 public:
 	UFUNCTION()
@@ -21,11 +27,36 @@ protected:
 	virtual void Discharge();
 	virtual void Reload(struct FItemStruct& Magazine);
 
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Firearm")
-	TArray<class UItemData*> MagazineTypes{};
+	void LoadChamberFromMagazine();
+	void LoadChamberFromMagazine(struct FItemStruct& Magazine);
+
+	UFUNCTION()
+	void DecrementFireRateTimer(float DeltaSeconds);
+
+	UFUNCTION()
+	void PlayDischargeSound();
+	UFUNCTION()
+	void PlayReloadSound();
 	
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Firearm")
+	float FireRateTimer{};
+	
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Firearm")
+	class UFirearmData* FirearmData{nullptr};
+	
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components")
 	class UEquipmentComponent* Attachments{nullptr};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components")
+	class UParticleSystemComponent* MuzzleFlashVFX{nullptr};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components")
+	class UAudioComponent* AudioComponent{nullptr};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components")
+	class UAudioComponent* HandlingAudioComponent{nullptr};
+	
 };
