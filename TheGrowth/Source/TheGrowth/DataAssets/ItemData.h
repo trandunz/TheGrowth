@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Templates/Tuple.h"
 #include "ItemData.generated.h"
 
 UENUM()
@@ -33,13 +34,22 @@ struct FItemStruct
 {
 	GENERATED_BODY()
 
-	bool AddItemToInventory(FItemStruct& Item);
+	bool operator== (const FItemStruct& OtherItem) const {
+		if (OtherItem.LocationInfo == LocationInfo)
+			return true;
+		else
+			return false;
+	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UItemData* ItemData{};
 	
 	TArray<FItemStruct> Inventory{};
-	
+
+	TTuple<class UW_InventoryContainer*, int, FVector2D> LocationInfo{};
+
+	bool bRotated{false};
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MaxInventorySize{9999};
 };

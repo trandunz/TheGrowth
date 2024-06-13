@@ -33,8 +33,6 @@ void AItemBase::Interact(class ASurvivalCharacter* Character)
 	if (IsValid(Character) == false)
 		return;
 
-	TogglePhysics(false);
-	
 	Character->PickupItem(this);
 }
 

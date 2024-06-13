@@ -56,14 +56,78 @@ bool UW_InventoryContainer::CanFitItem(AItemBase* Item)
 	if (Item->ItemComponent->ItemData->SizeY * Item->ItemComponent->ItemData->SizeX > ContainerData->TotalInventorySize)
 		return false;
 
-	bool CanFitItem{true};
+	bool CanFitItem{false};
 	for(auto SlotCollection : LayoutWidget->SlotCollections)
 	{
-		if (SlotCollection->CanFitItem(Item) == false)
-			CanFitItem = false;
+		//if (SlotCollection->CanFitItem(Item))
+		//{
+		//	CanFitItem = true;
+		//}
 	}
 
 	return CanFitItem;
+}
+
+TTuple<int, FVector2D> UW_InventoryContainer::PickupItem(AItemBase* Item)
+{
+	TTuple<int, FVector2D> LocationInformation(-1, FVector2D{-1,-1});
+
+	if (IsValid(ContainerData) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Container Data Invalid") );
+		return LocationInformation;
+	}
+	
+
+	if (IsValid(Item) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Item Reference Invalid") );
+		return LocationInformation;
+	}
+		
+
+	if (IsValid(LayoutWidget) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Layout Widget Invalid") );
+		return LocationInformation;
+	}
+		
+	
+	if (Item->ItemComponent->ItemData->SizeY * Item->ItemComponent->ItemData->SizeX > ContainerData->TotalInventorySize)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Item Too Large") );
+		return LocationInformation;
+	}
+
+	
+	for(int I = 0; I < LayoutWidget->SlotCollections.Num(); I++)
+	{
+		if (IsValid(LayoutWidget->SlotCollections[I]) == false)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Slot Collection Invalid") );
+			continue;
+		}
+		
+		FVector2D SlotCollectionInformation = LayoutWidget->SlotCollections[I]->PickupItem(Item);
+		if (SlotCollectionInformation.X != -1)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Add Item To Inventory Slot Collection") );
+			LocationInformation.Get<0>() = I;
+			LocationInformation.Get<1>() = SlotCollectionInformation;
+			return LocationInformation;
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Item Too Large For Container") );
+	return LocationInformation;
+}
+
+void UW_InventoryContainer::RemoveItem(FItemStruct& Item)
+{
+	if (Item.LocationInfo.Get<1>() != -1)
+		LayoutWidget->SlotCollections[Item.LocationInfo.Get<1>()]->RemoveItem(Item);
+	else
+		bOccupied = false;
 }
 
 void UW_InventoryContainer::UpdateContainer()

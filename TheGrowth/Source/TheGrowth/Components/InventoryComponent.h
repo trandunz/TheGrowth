@@ -18,9 +18,12 @@ class THEGROWTH_API UInventoryComponent : public UActorComponent
 
 protected:
 	
-	void AddItem(class AItemBase* Item);
-	void AddItem(FItemStruct& Item);
+	void AddItem(class AItemBase* Item, TTuple<UW_InventoryContainer*, int, FVector2D>& LocationInfo);
+	void AddItem(FItemStruct& Item, TTuple<UW_InventoryContainer*, int, FVector2D> LocationInfo = {});
 
+	void RemoveItem(FItemStruct& Item);
+
+	
 protected:
 	UPROPERTY(EditAnywhere, Category= Inventory, meta = (AllowPrivateAccess = "true"))
 	TArray<FItemStruct> Inventory{};

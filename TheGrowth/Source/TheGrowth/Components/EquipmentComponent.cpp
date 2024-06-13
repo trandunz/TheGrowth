@@ -18,7 +18,7 @@ void UEquipmentComponent::EmptyNamedSlot(FString Name)
 {
 	if (Slots.Contains(Name))
 	{
-		Slots[Name] = {};
+		Slots[Name] = {nullptr};
 	}
 }
 

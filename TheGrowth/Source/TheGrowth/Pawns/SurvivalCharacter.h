@@ -84,7 +84,7 @@ protected:
 	void TryInteract();
 
 	UFUNCTION()
-	void PickupItem(class AItemBase* Item);
+	bool PickupItem(class AItemBase* Item);
 
 	UFUNCTION()
 	void UpdateAimTimeline(float Delta);

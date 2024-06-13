@@ -7,7 +7,7 @@ void USurvivalMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	bOrientRotationToMovement = true;
+	bOrientRotationToMovement = false;
 	RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 	JumpZVelocity = 700.f;
 	AirControl = 0.35f;

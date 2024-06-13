@@ -144,3 +144,146 @@ bool UW_InventorySlotCollection::CanFitItem(AItemBase* Item)
 
 	return false;
 }
+
+FVector2D UW_InventorySlotCollection::PickupItem(AItemBase* Item)
+{
+	for(int32 SlotY = 0; SlotY < SizeY; SlotY++)
+	{
+		for(int32 SlotX = 0; SlotX < SizeX; SlotX++)
+		{
+			// Vertical 
+			bool ItemCanFitHere{true};
+			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeY; ItemY++)
+			{
+				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeX; ItemX++)
+				{
+					if (ItemY + SlotY >= SizeY)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Item Too Big Y Vert") );
+						ItemCanFitHere = false;
+						continue;
+					}
+					if (ItemX + SlotX >= SizeX)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Item Too Big X Vert") );
+						ItemCanFitHere = false;
+						continue;
+					}
+					int32 NewIndex = ((SlotY + ItemY) * SizeX) + (SlotX + ItemX);
+					if (SlotWidgets[NewIndex]->bOccupied)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Item Slot Occupied Vert") );
+						ItemCanFitHere = false;
+						continue;
+					}
+				}
+			}
+			if (ItemCanFitHere)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Valid Item Slot Identified Vert") );
+				PopulateSlotWithItem({(double)SlotX, (double)SlotY}, Item, false);
+				return {(double)SlotX, (double)SlotY};
+			}
+
+			// Horizontal 
+			ItemCanFitHere = true;
+			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeX; ItemY++)
+			{
+				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeY; ItemX++)
+				{
+					if (ItemY + SlotY >= SizeY)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Item Too Big Y Vert") );
+						ItemCanFitHere = false;
+						continue;
+					}
+					if (ItemX + SlotX >= SizeX)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Item Too Big X Vert") );
+						ItemCanFitHere = false;
+						continue;
+					}
+					int32 NewIndex = ((SlotY + ItemY) * SizeX) + (SlotX + ItemX);
+					if (SlotWidgets[NewIndex]->bOccupied)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Item Slot Occupied Vert") );
+						ItemCanFitHere = false;
+						continue;
+					}
+				}
+			}
+			if (ItemCanFitHere)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Valid Item Slot Identified Vert") );
+				PopulateSlotWithItem({(double)SlotX, (double)SlotY}, Item, false);
+				Item->ItemComponent->bRotated = true;
+				return {(double)SlotX, (double)SlotY};
+			}
+		}
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("Item Could Not Fit") );
+	return {-1, -1};
+}
+
+void UW_InventorySlotCollection::RemoveItem(FItemStruct& Item)
+{
+	if (Item.bRotated)
+	{
+		if (Item.LocationInfo.Get<2>().X != -1)
+		{
+			for(int32 ItemY = 0; ItemY < Item.ItemData->SizeX; ItemY++)
+			{
+				for(int32 ItemX = 0; ItemX < Item.ItemData->SizeY; ItemX++)
+				{
+					int32 NewIndex = ((Item.LocationInfo.Get<2>().Y + ItemY) * SizeX) + (Item.LocationInfo.Get<2>().X + ItemX);
+					SlotWidgets[NewIndex]->bOccupied = false;
+					SlotWidgets[NewIndex]->SetOverlayColor(FLinearColor::Transparent);
+				}
+			}
+		}
+	}
+	else
+	{
+		if (Item.LocationInfo.Get<2>().X != -1)
+		{
+			for(int32 ItemY = 0; ItemY < Item.ItemData->SizeY; ItemY++)
+			{
+				for(int32 ItemX = 0; ItemX < Item.ItemData->SizeX; ItemX++)
+				{
+					int32 NewIndex = ((Item.LocationInfo.Get<2>().Y + ItemY) * SizeX) + (Item.LocationInfo.Get<2>().X + ItemX);
+					SlotWidgets[NewIndex]->bOccupied = false;
+					SlotWidgets[NewIndex]->SetOverlayColor(FLinearColor::Transparent);
+				}
+			}
+		}
+	}
+}
+
+void UW_InventorySlotCollection::PopulateSlotWithItem(FVector2D InventorySlot, AItemBase* Item, bool bVertical)
+{
+	if (bVertical)
+	{
+		for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeX; ItemY++)
+		{
+			for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeY; ItemX++)
+			{
+				int32 NewIndex = ((InventorySlot.Y + ItemY) * SizeX) + (InventorySlot.X + ItemX);
+				SlotWidgets[NewIndex]->SetOverlayColor(Item->ItemComponent->ItemData->BackgroundColor);
+				SlotWidgets[NewIndex]->bOccupied = true;
+			}
+		}
+	}
+	else
+	{
+		for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeY; ItemY++)
+		{
+			for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeX; ItemX++)
+			{
+				int32 NewIndex = ((InventorySlot.Y + ItemY) * SizeX) + (InventorySlot.X + ItemX);
+				SlotWidgets[NewIndex]->SetOverlayColor(Item->ItemComponent->ItemData->BackgroundColor);
+				SlotWidgets[NewIndex]->bOccupied = true;
+			}
+		}
+	}
+}

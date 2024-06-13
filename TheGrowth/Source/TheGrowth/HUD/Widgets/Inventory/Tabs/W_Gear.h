@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Templates/Tuple.h"
+#include "TheGrowth/DataAssets/ItemData.h"
 #include "W_Gear.generated.h"
 
 UCLASS()
@@ -14,9 +16,12 @@ class THEGROWTH_API UW_Gear : public UUserWidget
 public:
 	UFUNCTION()
 	bool CanPickupItem(class AItemBase* Item);
-
+	
+	TTuple<class UW_InventoryContainer*, int, FVector2D> PickupItem(class AItemBase* Item);
+	void RemoveItem(FItemStruct& Item);
+	
 protected:
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<class UW_InventoryContainer*> Containers{};
 	
 protected:

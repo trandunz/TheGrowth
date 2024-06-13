@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "TheGrowth/DataAssets/ItemData.h"
 #include "W_InventorySlotCollection.generated.h"
 
 UCLASS()
@@ -17,6 +18,13 @@ class THEGROWTH_API UW_InventorySlotCollection : public UUserWidget
 public:
 	UFUNCTION()
 	bool CanFitItem(class AItemBase* Item);
+
+	UFUNCTION()
+	FVector2D PickupItem(class AItemBase* Item);
+	UFUNCTION()
+	void RemoveItem(FItemStruct& Item);
+	
+	void PopulateSlotWithItem(FVector2D InventorySlot, class AItemBase* Item, bool bVertical);
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Inventory")

@@ -32,6 +32,8 @@ protected:
 
 	UFUNCTION()
 	void DecrementFireRateTimer(float DeltaSeconds);
+	UFUNCTION()
+	void DecrementRecoilTimer(float DeltaSeconds);
 
 	UFUNCTION()
 	void PlayDischargeSound();
@@ -41,6 +43,10 @@ protected:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Firearm")
 	float FireRateTimer{};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Firearm")
+	float RecoilTimer{};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Firearm")
+	int32 CurrentRecoilIndex{};
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Firearm")

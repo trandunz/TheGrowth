@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "TheGrowth/DataAssets/ItemData.h"
+#include "Templates/Tuple.h"
 #include "W_InventoryContainer.generated.h"
 
 UCLASS()
@@ -19,6 +20,9 @@ public:
 
 	UFUNCTION()
 	bool CanFitItem(class AItemBase* Item);
+
+	TTuple<int, FVector2D> PickupItem(class AItemBase* Item);
+	void RemoveItem(FItemStruct& Item);
 	
 protected:
 	UFUNCTION()
@@ -37,6 +41,7 @@ protected:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "References")
 	class UW_InventoryContainerLayout* LayoutWidget{};
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
 	class UNamedSlot* ContainerWidget{};

@@ -44,6 +44,7 @@ void AWeaponBase::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	
 	DecrementFireRateTimer(DeltaSeconds);
+	DecrementRecoilTimer(DeltaSeconds);
 }
 
 bool AWeaponBase::CanFitMagazine(UItemData* Magazine)
@@ -102,7 +103,7 @@ void AWeaponBase::Discharge()
 	{
 		DirectionOfMotion = ForwardHitResult.Location - TraceStart;
 	}
-		
+	
 	SpawnedProjectile->SetDirectionOfMotion(DirectionOfMotion);
 	SpawnedProjectile->ActorsToIngore.Add(this);
 	SpawnedProjectile->ActorsToIngore.Add(GetAttachParentActor());
@@ -113,6 +114,8 @@ void AWeaponBase::Discharge()
 	MuzzleFlashVFX->Activate(true);
 	PlayDischargeSound();
 	FireRateTimer = 1.0f / (FirearmData->RPM / 60.0f);
+	RecoilTimer = FirearmData->RecoilResetTime;
+	CurrentRecoilIndex = (CurrentRecoilIndex + 1) % FirearmData->RecoilTable.Num();
 
 	LoadChamberFromMagazine();
 }
@@ -124,10 +127,10 @@ void AWeaponBase::Reload(FItemStruct& Magazine)
 		UE_LOG(LogTemp, Warning, TEXT("Attempted to reload invalid magazine") );
 		return;
 	}
-	
-	Attachments->PopulateNamedSlot(MAGAZINE_SLOT_ID, Magazine);
-	LoadChamberFromMagazine(Magazine);
 
+	LoadChamberFromMagazine(Magazine);
+	Attachments->PopulateNamedSlot(MAGAZINE_SLOT_ID, Magazine);
+	
 	PlayReloadSound();
 }
 
@@ -145,6 +148,7 @@ void AWeaponBase::LoadChamberFromMagazine()
 		{
 			Attachments->PopulateNamedSlot(CHAMBER_SLOT_ID, CurrentMagazine->Inventory[0]);
 			CurrentMagazine->Inventory.RemoveAt(0);
+			CurrentMagazine->Inventory.Shrink();
 		}
 	}
 }
@@ -155,6 +159,7 @@ void AWeaponBase::LoadChamberFromMagazine(FItemStruct& Magazine)
 	{
 		Attachments->PopulateNamedSlot(CHAMBER_SLOT_ID, Magazine.Inventory[0]);
 		Magazine.Inventory.RemoveAt(0);
+		Magazine.Inventory.Shrink();
 	}
 }
 
@@ -166,6 +171,20 @@ void AWeaponBase::DecrementFireRateTimer(float DeltaSeconds)
 		
 		if (FireRateTimer < 0)
 			FireRateTimer = 0.0f;
+	}
+}
+
+void AWeaponBase::DecrementRecoilTimer(float DeltaSeconds)
+{
+	if (RecoilTimer > 0)
+	{
+		RecoilTimer -= DeltaSeconds;
+		
+		if (RecoilTimer <= 0)
+		{
+			RecoilTimer = 0.0f;
+			CurrentRecoilIndex = 0;
+		}
 	}
 }
 

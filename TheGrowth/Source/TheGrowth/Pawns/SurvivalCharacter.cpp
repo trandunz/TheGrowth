@@ -112,8 +112,6 @@ void ASurvivalCharacter::BeginPlay()
 	PlayerStateRef = GetPlayerState<ASurvivalPlayerState>();
 	MovementComponent = GetCharacterMovement<USurvivalMovementComponent>();
 	
-	MovementComponent->bOrientRotationToMovement = false;
-	
 	if (IsValid(PlayerController))
 	{
 		HUDRef = PlayerController->GetHUD<ASurvivalHUD>();
@@ -573,13 +571,21 @@ void ASurvivalCharacter::TryInteract()
 	LastInteractable->Interact(this);
 }
 
-void ASurvivalCharacter::PickupItem(AItemBase* Item)
+bool ASurvivalCharacter::PickupItem(AItemBase* Item)
 {
 	if (IsValid(Item) == false)
-		return;
+		return false;
 
-	InventoryComponent->AddItem(Item);
-	Item->Destroy();
+	TTuple<UW_InventoryContainer*, int, FVector2D> LocationInformation = GearRef->PickupItem(Item);
+	if (LocationInformation.Get<0>() != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Add Item To Inventory Component") );
+		InventoryComponent->AddItem(Item, LocationInformation);
+		Item->Destroy();
+		return true;
+	}
+
+	return false;
 }
 
 void ASurvivalCharacter::UpdateAimTimeline(float Delta)
@@ -605,13 +611,15 @@ void ASurvivalCharacter::Reload()
 	if (IsValid(ActiveWeaponRef) == false)
 		return;
 
-	for(FItemStruct Item : InventoryComponent->Inventory)
+	for(FItemStruct& Item : InventoryComponent->Inventory)
 	{
 		if (Item.ItemData->ItemType == Magazine)
 		{
 			if (ActiveWeaponRef->CanFitMagazine(Item.ItemData))
 			{
 				ActiveWeaponRef->Reload(Item);
+				GearRef->RemoveItem(Item);
+				InventoryComponent->RemoveItem(Item);
 				break;
 			}
 		}

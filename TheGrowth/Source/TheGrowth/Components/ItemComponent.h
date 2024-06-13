@@ -13,4 +13,7 @@ class THEGROWTH_API UItemComponent : public UInventoryComponent
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UItemData* ItemData{nullptr};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bRotated{};
 };
