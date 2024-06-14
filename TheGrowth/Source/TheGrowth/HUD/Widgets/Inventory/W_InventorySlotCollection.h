@@ -36,6 +36,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Inventory")
 	TSubclassOf<UUserWidget> SlotWidget{};
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Inventory")
+	TSubclassOf<class UW_InventoryItem> InventoryItemWidget{};
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "References")
 	TArray<class UW_InventorySlot*> SlotWidgets{};
@@ -43,4 +46,7 @@ protected:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
 	class UUniformGridPanel* Grid{};
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= "Components", meta = (BindWidget))
+	class UOverlay* Overlay{};
 };

@@ -1,10 +1,16 @@
 #include "W_InventorySlotCollection.h"
 
+#include "W_InventoryItem.h"
 #include "W_InventorySlot.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 #include "TheGrowth/Components/ItemComponent.h"
 #include "TheGrowth/DataAssets/ItemData.h"
+#include "W_InventoryItem.h"
+#include "Components/Image.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
+#include "Components/SizeBox.h"
 #include "TheGrowth/Items/ItemBase.h"
 
 void UW_InventorySlotCollection::NativePreConstruct()
@@ -21,7 +27,7 @@ void UW_InventorySlotCollection::NativePreConstruct()
 		for(int32 Y = 0; Y < SizeY; Y++)
 			for(int32 X = 0; X < SizeX; X++)
 			{
-				const auto NewSlot = CreateWidget(Grid, SlotWidget);
+				const auto NewSlot = CreateWidget(GetOwningPlayer(), SlotWidget);
 				SlotWidgets.Add(Cast<UW_InventorySlot>(NewSlot));
 				const auto GridSlot = Grid->AddChildToUniformGrid(NewSlot);
 				GridSlot->SetColumn(X);
@@ -84,9 +90,9 @@ bool UW_InventorySlotCollection::CanFitItem(AItemBase* Item)
 		{
 			// Horizontal
 			bool ItemCanFitHere{true};
-			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeY; ItemY++)
+			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemStruct.ItemData->SizeY; ItemY++)
 			{
-				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeX; ItemX++)
+				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemStruct.ItemData->SizeX; ItemX++)
 				{
 					if (ItemY + SlotY >= SizeY)
 					{
@@ -113,9 +119,9 @@ bool UW_InventorySlotCollection::CanFitItem(AItemBase* Item)
 
 			// Vertical
 			ItemCanFitHere = true;
-			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeY; ItemY++)
+			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemStruct.ItemData->SizeY; ItemY++)
 			{
-				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeX; ItemX++)
+				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemStruct.ItemData->SizeX; ItemX++)
 				{
 					if (ItemX + SlotY >= SizeY)
 					{
@@ -153,9 +159,9 @@ FVector2D UW_InventorySlotCollection::PickupItem(AItemBase* Item)
 		{
 			// Vertical 
 			bool ItemCanFitHere{true};
-			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeY; ItemY++)
+			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemStruct.ItemData->SizeY; ItemY++)
 			{
-				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeX; ItemX++)
+				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemStruct.ItemData->SizeX; ItemX++)
 				{
 					if (ItemY + SlotY >= SizeY)
 					{
@@ -187,9 +193,9 @@ FVector2D UW_InventorySlotCollection::PickupItem(AItemBase* Item)
 
 			// Horizontal 
 			ItemCanFitHere = true;
-			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeX; ItemY++)
+			for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemStruct.ItemData->SizeX; ItemY++)
 			{
-				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeY; ItemX++)
+				for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemStruct.ItemData->SizeY; ItemX++)
 				{
 					if (ItemY + SlotY >= SizeY)
 					{
@@ -216,7 +222,7 @@ FVector2D UW_InventorySlotCollection::PickupItem(AItemBase* Item)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Valid Item Slot Identified Vert") );
 				PopulateSlotWithItem({(double)SlotX, (double)SlotY}, Item, false);
-				Item->ItemComponent->bRotated = true;
+				Item->ItemComponent->ItemStruct.bRotated = true;
 				return {(double)SlotX, (double)SlotY};
 			}
 		}
@@ -262,26 +268,69 @@ void UW_InventorySlotCollection::RemoveItem(FItemStruct& Item)
 
 void UW_InventorySlotCollection::PopulateSlotWithItem(FVector2D InventorySlot, AItemBase* Item, bool bVertical)
 {
+	if (IsValid(Item) == false)
+		return;
+	if (IsValid(Item->ItemComponent->ItemStruct.ItemData) == false)
+		return;
+
+	if (UW_InventoryItem* InventoryItem = CreateWidget<UW_InventoryItem>(GetOwningPlayer(), InventoryItemWidget))
+	{
+		Item->ItemComponent->ItemStruct.InventoryItemWidgetRef = InventoryItem;
+
+		InventoryItem->ItemStruct = Item->ItemComponent->ItemStruct;
+		
+		UE_LOG(LogTemp, Warning, TEXT("Create Inventory item widget") );
+		if (auto ItemIcon = Item->ItemComponent->ItemStruct.ItemData->Icon)
+		{
+			InventoryItem->Icon->SetBrushFromTexture(ItemIcon);
+		}
+
+
+		if(Overlay)
+		{
+			auto OverlaySlot = Overlay->AddChildToOverlay(InventoryItem);
+			OverlaySlot->SetHorizontalAlignment(HAlign_Left);
+			OverlaySlot->SetVerticalAlignment(VAlign_Top);
+			ForceLayoutPrepass();
+			SlotWidgets[0]->ForceLayoutPrepass();
+			FVector2D DesiredSize = GetDesiredSize();
+			UE_LOG(LogTemp, Warning, TEXT("Desired Widget Size: %s"),  *DesiredSize.ToString());
+			
+			FVector2D DesiredLocation = (GetDesiredSize() / SlotWidgets[0]->GetDesiredSize()) * FVector2D{InventorySlot.X, InventorySlot.Y};
+			UE_LOG(LogTemp, Warning, TEXT("Desired Item Widget Location: %s"),  *DesiredLocation.ToString());
+			
+			InventoryItem->SizeBox->SetHeightOverride(SlotWidgets[0]->GetDesiredSize().Y * Item->ItemComponent->ItemStruct.ItemData->SizeY);
+			InventoryItem->SizeBox->SetWidthOverride(SlotWidgets[0]->GetDesiredSize().X * Item->ItemComponent->ItemStruct.ItemData->SizeX);
+			FMargin NewPadding{};
+			NewPadding.Top = (SlotWidgets[0]->GetDesiredSize().Y * Item->ItemComponent->ItemStruct.ItemData->SizeY) * InventorySlot.Y;
+			NewPadding.Left = (SlotWidgets[0]->GetDesiredSize().X * Item->ItemComponent->ItemStruct.ItemData->SizeX) * InventorySlot.X;
+			OverlaySlot->SetPadding(NewPadding);
+			
+			Overlay->InvalidateLayoutAndVolatility();
+		}
+				
+	}
+	
 	if (bVertical)
 	{
-		for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeX; ItemY++)
+		for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemStruct.ItemData->SizeX; ItemY++)
 		{
-			for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeY; ItemX++)
+			for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemStruct.ItemData->SizeY; ItemX++)
 			{
 				int32 NewIndex = ((InventorySlot.Y + ItemY) * SizeX) + (InventorySlot.X + ItemX);
-				SlotWidgets[NewIndex]->SetOverlayColor(Item->ItemComponent->ItemData->BackgroundColor);
+				SlotWidgets[NewIndex]->SetOverlayColor(Item->ItemComponent->ItemStruct.ItemData->BackgroundColor);
 				SlotWidgets[NewIndex]->bOccupied = true;
 			}
 		}
 	}
 	else
 	{
-		for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemData->SizeY; ItemY++)
+		for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemStruct.ItemData->SizeY; ItemY++)
 		{
-			for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemData->SizeX; ItemX++)
+			for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemStruct.ItemData->SizeX; ItemX++)
 			{
 				int32 NewIndex = ((InventorySlot.Y + ItemY) * SizeX) + (InventorySlot.X + ItemX);
-				SlotWidgets[NewIndex]->SetOverlayColor(Item->ItemComponent->ItemData->BackgroundColor);
+				SlotWidgets[NewIndex]->SetOverlayColor(Item->ItemComponent->ItemStruct.ItemData->BackgroundColor);
 				SlotWidgets[NewIndex]->bOccupied = true;
 			}
 		}

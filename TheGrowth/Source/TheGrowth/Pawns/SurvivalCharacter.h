@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "TheGrowth/DataAssets/ItemData.h"
 #include "SurvivalCharacter.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -16,6 +17,7 @@ class ASurvivalCharacter : public ACharacter
 	friend class AItemBase;
 	friend class UW_SurvivalHUD;
 	friend class ASurvivalHUD;
+	friend class UW_InventoryItem;
 
 protected:
 	ASurvivalCharacter();
@@ -85,6 +87,9 @@ protected:
 
 	UFUNCTION()
 	bool PickupItem(class AItemBase* Item);
+
+	UFUNCTION()
+	void RemoveItem(FItemStruct& Item);
 
 	UFUNCTION()
 	void UpdateAimTimeline(float Delta);

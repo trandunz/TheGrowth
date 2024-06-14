@@ -588,6 +588,12 @@ bool ASurvivalCharacter::PickupItem(AItemBase* Item)
 	return false;
 }
 
+void ASurvivalCharacter::RemoveItem(FItemStruct& Item)
+{
+	GearRef->RemoveItem(Item);
+	InventoryComponent->RemoveItem(Item);
+}
+
 void ASurvivalCharacter::UpdateAimTimeline(float Delta)
 {
 	AimDelta = Delta;
@@ -618,8 +624,7 @@ void ASurvivalCharacter::Reload()
 			if (ActiveWeaponRef->CanFitMagazine(Item.ItemData))
 			{
 				ActiveWeaponRef->Reload(Item);
-				GearRef->RemoveItem(Item);
-				InventoryComponent->RemoveItem(Item);
+				RemoveItem(Item);
 				break;
 			}
 		}

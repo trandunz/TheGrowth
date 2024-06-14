@@ -15,6 +15,7 @@ class THEGROWTH_API UInventoryComponent : public UActorComponent
 	friend class UW_Inventory;
 	friend class AWeaponBase;
 	friend class AMagazineBase;
+	friend class UW_InventorySlotCollection;
 
 protected:
 	

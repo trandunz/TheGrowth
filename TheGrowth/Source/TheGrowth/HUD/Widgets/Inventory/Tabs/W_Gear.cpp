@@ -39,7 +39,7 @@ bool UW_Gear::CanPickupItem(AItemBase* Item)
 	// Generic Item
 	for(auto Container : Containers)
 	{
-		if (Container->SlotType == Item->ItemComponent->ItemData->ItemType)
+		if (Container->SlotType == Item->ItemComponent->ItemStruct.ItemData->ItemType)
 		{
 			if (Container->bOccupied == false)
 				return true;
@@ -59,12 +59,12 @@ TTuple<UW_InventoryContainer*, int, FVector2D> UW_Gear::PickupItem(AItemBase* It
 	if (IsValid(Item) == false)
 		return LocationInformation;
 
-	if (IsValid(Item->ItemComponent->ItemData) == false)
+	if (IsValid(Item->ItemComponent->ItemStruct.ItemData) == false)
 		return LocationInformation;
 
 	for(auto Container : Containers)
 	{
-		if (Container->SlotType == Item->ItemComponent->ItemData->ItemType)
+		if (Container->SlotType == Item->ItemComponent->ItemStruct.ItemData->ItemType)
 		{
 			if (Container->bOccupied == false)
 			{
@@ -81,6 +81,9 @@ TTuple<UW_InventoryContainer*, int, FVector2D> UW_Gear::PickupItem(AItemBase* It
 			LocationInformation.Get<0>() = Container;
 			LocationInformation.Get<1>() = ContainerInformation.Get<0>();
 			LocationInformation.Get<2>() = ContainerInformation.Get<1>();
+			
+			Item->ItemComponent->ItemStruct.LocationInfo = LocationInformation;
+			
 			return LocationInformation;
 		}
 	}

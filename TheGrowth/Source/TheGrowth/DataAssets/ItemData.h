@@ -50,6 +50,9 @@ struct FItemStruct
 
 	bool bRotated{false};
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UW_InventoryItem* InventoryItemWidgetRef{};
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MaxInventorySize{9999};
 };

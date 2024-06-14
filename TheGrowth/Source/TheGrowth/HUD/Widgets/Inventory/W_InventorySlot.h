@@ -20,7 +20,6 @@ class THEGROWTH_API UW_InventorySlot : public UUserWidget
 protected:
 	UFUNCTION()
 	void SetOverlayColor(FLinearColor Color);
-	
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Overlay")

@@ -16,6 +16,9 @@ int32 UW_InventorySlot::NativePaint(const FPaintArgs& Args, const FGeometry& All
 void UW_InventorySlot::DrawBorderOutline(const FGeometry& AllottedGeometry, FSlateWindowElementList& OutDrawElements,
 	int32 LayerId) const
 {
+	if (bOccupied)
+		return;
+	
 	FVector2D TopLeft;
 	TopLeft.X = 0;
 	TopLeft.Y = 0;

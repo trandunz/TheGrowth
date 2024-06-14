@@ -11,11 +11,11 @@ UCLASS()
 class THEGROWTH_API AItemBase : public AActor, public IInteractInterface
 {
 	GENERATED_BODY()
+	friend class UItemComponent;
 	friend class UInventoryComponent;
 	friend class UW_InventorySlotCollection;
 	friend class UW_InventoryContainer;
 	friend class UW_Gear;
-
 
 	
 protected:

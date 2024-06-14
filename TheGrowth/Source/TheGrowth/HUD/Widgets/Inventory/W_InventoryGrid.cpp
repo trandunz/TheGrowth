@@ -35,7 +35,7 @@ void UW_InventoryGrid::ContructGrid(int32 NewSizeX, int32 NewSizeY)
 	{
 		for(int32 x = 0; x < SizeX; x++)
 		{
-			auto NewSlot = CreateWidget<UW_InventorySlot>(UniformGrid, SlotWidget);
+			auto NewSlot = CreateWidget<UW_InventorySlot>(GetOwningPlayer(), SlotWidget);
 			Slots.Add(NewSlot);
 			
 			auto Widget = UniformGrid->AddChildToUniformGrid(NewSlot, y, x);

@@ -6,14 +6,21 @@
 #include "ItemComponent.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class THEGROWTH_API UItemComponent : public UInventoryComponent
+class THEGROWTH_API UItemComponent : public UActorComponent
 {
 	GENERATED_BODY()
+	friend class UW_Gear;
+	friend class UInventoryComponent;
+	friend class UW_InventorySlotCollection;
+	friend class UW_InventoryContainer;
 	
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UItemData* ItemData{nullptr};
+	void AddItem(class AItemBase* Item, TTuple<UW_InventoryContainer*, int, FVector2D>& LocationInfo);
+	void AddItem(FItemStruct& Item, TTuple<UW_InventoryContainer*, int, FVector2D> LocationInfo = {});
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool bRotated{};
+	void RemoveItem(FItemStruct& Item);
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FItemStruct ItemStruct{};
 };

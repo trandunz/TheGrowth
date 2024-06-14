@@ -53,7 +53,7 @@ bool UW_InventoryContainer::CanFitItem(AItemBase* Item)
 	if (IsValid(LayoutWidget) == false)
 		return false;
 	
-	if (Item->ItemComponent->ItemData->SizeY * Item->ItemComponent->ItemData->SizeX > ContainerData->TotalInventorySize)
+	if (Item->ItemComponent->ItemStruct.ItemData->SizeY * Item->ItemComponent->ItemStruct.ItemData->SizeX > ContainerData->TotalInventorySize)
 		return false;
 
 	bool CanFitItem{false};
@@ -93,7 +93,7 @@ TTuple<int, FVector2D> UW_InventoryContainer::PickupItem(AItemBase* Item)
 	}
 		
 	
-	if (Item->ItemComponent->ItemData->SizeY * Item->ItemComponent->ItemData->SizeX > ContainerData->TotalInventorySize)
+	if (Item->ItemComponent->ItemStruct.ItemData->SizeY * Item->ItemComponent->ItemStruct.ItemData->SizeX > ContainerData->TotalInventorySize)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Item Too Large") );
 		return LocationInformation;
@@ -148,7 +148,7 @@ void UW_InventoryContainer::UpdateContainer()
 	{
 		bOccupied = true;
 		
-		auto NewWidget = CreateWidget(ContainerWidget, ContainerData->ContainerLayout);
+		auto NewWidget = CreateWidget(GetOwningPlayer(), ContainerData->ContainerLayout);
 
 		LayoutWidget = Cast<UW_InventoryContainerLayout>(NewWidget);
 		

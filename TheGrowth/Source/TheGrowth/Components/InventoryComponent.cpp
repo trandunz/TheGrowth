@@ -3,6 +3,7 @@
 #include "InventoryComponent.h"
 
 #include "ItemComponent.h"
+#include "TheGrowth/HUD/Widgets/Inventory/W_InventoryItem.h"
 #include "TheGrowth/Items/ItemBase.h"
 
 void UInventoryComponent::AddItem(AItemBase* Item, TTuple<UW_InventoryContainer*, int, FVector2D>& LocationInfo)
@@ -10,11 +11,11 @@ void UInventoryComponent::AddItem(AItemBase* Item, TTuple<UW_InventoryContainer*
 	if (IsValid(Item) == false)
 		return;
 
-	if (IsValid(Item->ItemComponent->ItemData) == false)
+	if (IsValid(Item->ItemComponent->ItemStruct.ItemData) == false)
 		return;
 	
 	
-	Inventory.Add({Item->ItemComponent->ItemData, Item->ItemComponent->Inventory, LocationInfo, Item->ItemComponent->bRotated});
+	Inventory.Add(Item->ItemComponent->ItemStruct);
 }
 
 void UInventoryComponent::AddItem(FItemStruct& Item, TTuple<UW_InventoryContainer*, int, FVector2D> LocationInfo)
@@ -29,6 +30,13 @@ void UInventoryComponent::AddItem(FItemStruct& Item, TTuple<UW_InventoryContaine
 
 void UInventoryComponent::RemoveItem(FItemStruct& Item)
 {
+	if (IsValid(Item.InventoryItemWidgetRef))
+	{
+		Item.InventoryItemWidgetRef->RemoveFromParent();
+		Item.InventoryItemWidgetRef->MarkAsGarbage();
+		Item.InventoryItemWidgetRef = nullptr;
+	}
+	
 	Inventory.RemoveSingle(Item);
 	Inventory.Shrink();
 }
