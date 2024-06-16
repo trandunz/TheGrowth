@@ -9,6 +9,7 @@ class THEGROWTH_API UW_InventoryContainerLayout : public UUserWidget
 {
 	GENERATED_BODY()
 	friend class UW_InventoryContainer;
+	friend struct FItemStruct;
 
 	virtual void NativeOnInitialized() override;
 	

@@ -7,11 +7,15 @@
 #include "TheGrowth/Components/ItemComponent.h"
 #include "TheGrowth/DataAssets/ItemData.h"
 #include "W_InventoryItem.h"
+#include "Blueprint/SlateBlueprintLibrary.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
+#include "Blueprint/WidgetTree.h"
 #include "Components/Image.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
 #include "Components/SizeBox.h"
 #include "TheGrowth/Items/ItemBase.h"
+#include "TheGrowth/Pawns/SurvivalCharacter.h"
 
 void UW_InventorySlotCollection::NativePreConstruct()
 {
@@ -27,13 +31,16 @@ void UW_InventorySlotCollection::NativePreConstruct()
 		for(int32 Y = 0; Y < SizeY; Y++)
 			for(int32 X = 0; X < SizeX; X++)
 			{
-				const auto NewSlot = CreateWidget(GetOwningPlayer(), SlotWidget);
+				const auto NewSlot = WidgetTree->ConstructWidget(SlotWidget);
 				SlotWidgets.Add(Cast<UW_InventorySlot>(NewSlot));
 				const auto GridSlot = Grid->AddChildToUniformGrid(NewSlot);
-				GridSlot->SetColumn(X);
-				GridSlot->SetRow(Y);
-				GridSlot->SetHorizontalAlignment(HAlign_Fill);
-				GridSlot->SetVerticalAlignment(VAlign_Fill);
+				if (IsValid(GridSlot))
+				{
+					GridSlot->SetColumn(X);
+					GridSlot->SetRow(Y);
+					GridSlot->SetHorizontalAlignment(HAlign_Fill);
+					GridSlot->SetVerticalAlignment(VAlign_Fill);
+				}
 			}
 	}
 }
@@ -80,6 +87,41 @@ void UW_InventorySlotCollection::DrawBorderOutline(const FGeometry& AllottedGeom
 	true,
 	2.0f
 	);
+}
+
+bool UW_InventorySlotCollection::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent,
+	UDragDropOperation* InOperation)
+{
+
+
+	UW_InventoryItem* ItemWidget = Cast<UW_InventoryItem>(InOperation->Payload);
+	if (IsValid(ItemWidget) == false)
+		return Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
+
+	FVector2D pixelPosition;
+	FVector2D viewportMinPosition;
+	FVector2D viewportMaxPosition;
+	
+	// Get the top left and bottom right viewport positions
+	USlateBlueprintLibrary::LocalToViewport( GetWorld(), InGeometry, FVector2D( 0, 0 ), pixelPosition, viewportMinPosition );
+	USlateBlueprintLibrary::LocalToViewport( GetWorld(), InGeometry, InGeometry.GetLocalSize(), pixelPosition, viewportMaxPosition );
+	
+	FVector2D MousePos = UWidgetLayoutLibrary::GetMousePositionOnViewport( GetWorld() );
+	FVector2D RelativePos = ( MousePos - viewportMinPosition ) / ( viewportMaxPosition - viewportMinPosition );
+
+	for(auto InventorySlot : SlotWidgets)
+	{
+		if (InventorySlot->GetCachedGeometry().GetRenderBoundingRect().ContainsPoint(MousePos))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Drop Attempt") );
+			break;
+		}
+	}
+	
+	//PopulateSlotWithItem(ItemWidget->ItemStruct);
+	//ItemWidget->CharacterReference->PickupItem(ItemWidget->ItemStruct);
+	
+	return Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
 }
 
 bool UW_InventorySlotCollection::CanFitItem(AItemBase* Item)
@@ -187,7 +229,7 @@ FVector2D UW_InventorySlotCollection::PickupItem(AItemBase* Item)
 			if (ItemCanFitHere)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Valid Item Slot Identified Vert") );
-				PopulateSlotWithItem({(double)SlotX, (double)SlotY}, Item, false);
+				//PopulateSlotWithItem({(double)SlotX, (double)SlotY}, Item, false);
 				return {(double)SlotX, (double)SlotY};
 			}
 
@@ -221,7 +263,7 @@ FVector2D UW_InventorySlotCollection::PickupItem(AItemBase* Item)
 			if (ItemCanFitHere)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Valid Item Slot Identified Vert") );
-				PopulateSlotWithItem({(double)SlotX, (double)SlotY}, Item, false);
+				//PopulateSlotWithItem({(double)SlotX, (double)SlotY}, Item, false);
 				Item->ItemComponent->ItemStruct.bRotated = true;
 				return {(double)SlotX, (double)SlotY};
 			}
@@ -266,21 +308,19 @@ void UW_InventorySlotCollection::RemoveItem(FItemStruct& Item)
 	}
 }
 
-void UW_InventorySlotCollection::PopulateSlotWithItem(FVector2D InventorySlot, AItemBase* Item, bool bVertical)
+void UW_InventorySlotCollection::PopulateSlotWithItem(FItemStruct& Item)
 {
-	if (IsValid(Item) == false)
-		return;
-	if (IsValid(Item->ItemComponent->ItemStruct.ItemData) == false)
+	if (IsValid(Item.ItemData) == false)
 		return;
 
 	if (UW_InventoryItem* InventoryItem = CreateWidget<UW_InventoryItem>(GetOwningPlayer(), InventoryItemWidget))
 	{
-		Item->ItemComponent->ItemStruct.InventoryItemWidgetRef = InventoryItem;
+		Item.InventoryItemWidgetRef = InventoryItem;
 
-		InventoryItem->ItemStruct = Item->ItemComponent->ItemStruct;
+		InventoryItem->ItemStruct = Item;
 		
 		UE_LOG(LogTemp, Warning, TEXT("Create Inventory item widget") );
-		if (auto ItemIcon = Item->ItemComponent->ItemStruct.ItemData->Icon)
+		if (auto ItemIcon = Item.ItemData->Icon)
 		{
 			InventoryItem->Icon->SetBrushFromTexture(ItemIcon);
 		}
@@ -296,14 +336,14 @@ void UW_InventorySlotCollection::PopulateSlotWithItem(FVector2D InventorySlot, A
 			FVector2D DesiredSize = GetDesiredSize();
 			UE_LOG(LogTemp, Warning, TEXT("Desired Widget Size: %s"),  *DesiredSize.ToString());
 			
-			FVector2D DesiredLocation = (GetDesiredSize() / SlotWidgets[0]->GetDesiredSize()) * FVector2D{InventorySlot.X, InventorySlot.Y};
+			FVector2D DesiredLocation = (GetDesiredSize() / SlotWidgets[0]->GetDesiredSize()) * FVector2D{Item.LocationInfo.Get<2>().X, Item.LocationInfo.Get<2>().Y};
 			UE_LOG(LogTemp, Warning, TEXT("Desired Item Widget Location: %s"),  *DesiredLocation.ToString());
 			
-			InventoryItem->SizeBox->SetHeightOverride(SlotWidgets[0]->GetDesiredSize().Y * Item->ItemComponent->ItemStruct.ItemData->SizeY);
-			InventoryItem->SizeBox->SetWidthOverride(SlotWidgets[0]->GetDesiredSize().X * Item->ItemComponent->ItemStruct.ItemData->SizeX);
+			InventoryItem->SizeBox->SetHeightOverride(SlotWidgets[0]->GetDesiredSize().Y * Item.ItemData->SizeY);
+			InventoryItem->SizeBox->SetWidthOverride(SlotWidgets[0]->GetDesiredSize().X * Item.ItemData->SizeX);
 			FMargin NewPadding{};
-			NewPadding.Top = (SlotWidgets[0]->GetDesiredSize().Y * Item->ItemComponent->ItemStruct.ItemData->SizeY) * InventorySlot.Y;
-			NewPadding.Left = (SlotWidgets[0]->GetDesiredSize().X * Item->ItemComponent->ItemStruct.ItemData->SizeX) * InventorySlot.X;
+			NewPadding.Top = (SlotWidgets[0]->GetDesiredSize().Y * Item.ItemData->SizeY) * Item.LocationInfo.Get<2>().Y;
+			NewPadding.Left = (SlotWidgets[0]->GetDesiredSize().X * Item.ItemData->SizeX) * Item.LocationInfo.Get<2>().X;
 			OverlaySlot->SetPadding(NewPadding);
 			
 			Overlay->InvalidateLayoutAndVolatility();
@@ -311,28 +351,13 @@ void UW_InventorySlotCollection::PopulateSlotWithItem(FVector2D InventorySlot, A
 				
 	}
 	
-	if (bVertical)
+	for(int32 ItemY = 0; ItemY < Item.ItemData->SizeY; ItemY++)
 	{
-		for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemStruct.ItemData->SizeX; ItemY++)
+		for(int32 ItemX = 0; ItemX < Item.ItemData->SizeX; ItemX++)
 		{
-			for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemStruct.ItemData->SizeY; ItemX++)
-			{
-				int32 NewIndex = ((InventorySlot.Y + ItemY) * SizeX) + (InventorySlot.X + ItemX);
-				SlotWidgets[NewIndex]->SetOverlayColor(Item->ItemComponent->ItemStruct.ItemData->BackgroundColor);
-				SlotWidgets[NewIndex]->bOccupied = true;
-			}
-		}
-	}
-	else
-	{
-		for(int32 ItemY = 0; ItemY < Item->ItemComponent->ItemStruct.ItemData->SizeY; ItemY++)
-		{
-			for(int32 ItemX = 0; ItemX < Item->ItemComponent->ItemStruct.ItemData->SizeX; ItemX++)
-			{
-				int32 NewIndex = ((InventorySlot.Y + ItemY) * SizeX) + (InventorySlot.X + ItemX);
-				SlotWidgets[NewIndex]->SetOverlayColor(Item->ItemComponent->ItemStruct.ItemData->BackgroundColor);
-				SlotWidgets[NewIndex]->bOccupied = true;
-			}
+			int32 NewIndex = ((Item.LocationInfo.Get<2>().Y + ItemY) * SizeX) + (Item.LocationInfo.Get<2>().X + ItemX);
+			SlotWidgets[NewIndex]->SetOverlayColor(Item.ItemData->BackgroundColor);
+			SlotWidgets[NewIndex]->bOccupied = true;
 		}
 	}
 }

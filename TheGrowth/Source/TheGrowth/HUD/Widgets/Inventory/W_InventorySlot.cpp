@@ -47,6 +47,7 @@ void UW_InventorySlot::DrawBorderOutline(const FGeometry& AllottedGeometry, FSla
 	);
 }
 
+
 void UW_InventorySlot::SetOverlayColor(FLinearColor Color)
 {
 	if (Color == FColor::Transparent)

@@ -30,12 +30,12 @@ void UInventoryComponent::AddItem(FItemStruct& Item, TTuple<UW_InventoryContaine
 
 void UInventoryComponent::RemoveItem(FItemStruct& Item)
 {
-	if (IsValid(Item.InventoryItemWidgetRef))
-	{
-		Item.InventoryItemWidgetRef->RemoveFromParent();
-		Item.InventoryItemWidgetRef->MarkAsGarbage();
-		Item.InventoryItemWidgetRef = nullptr;
-	}
+	//if (IsValid(Item.InventoryItemWidgetRef))
+	//{
+	//	Item.InventoryItemWidgetRef->RemoveFromParent();
+	//	Item.InventoryItemWidgetRef->MarkAsGarbage();
+	//	Item.InventoryItemWidgetRef = nullptr;
+	//}
 	
 	Inventory.RemoveSingle(Item);
 	Inventory.Shrink();

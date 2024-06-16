@@ -84,7 +84,6 @@ void UW_InventoryItem::NativeOnDragDetected(const FGeometry& InGeometry, const F
 
 	if (IsValid(CharacterReference))
 	{
-		// CAUSING CRASH
 		CharacterReference->RemoveItem(ItemStruct);
 	}
 	
@@ -92,6 +91,12 @@ void UW_InventoryItem::NativeOnDragDetected(const FGeometry& InGeometry, const F
 }
 
 FReply UW_InventoryItem::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	FEventReply ReplyResult = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton);
+	return ReplyResult.NativeReply;
+}
+
+FReply UW_InventoryItem::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	FEventReply ReplyResult = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton);
 	return ReplyResult.NativeReply;

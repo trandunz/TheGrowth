@@ -11,8 +11,10 @@ class THEGROWTH_API UW_InventoryContainer : public UUserWidget
 {
 	GENERATED_BODY()
 	friend class UW_Gear;
+	friend struct FItemStruct;
 
 	virtual void NativePreConstruct() override;
+	virtual void NativeOnInitialized() override;
 
 public:
 	UFUNCTION()
@@ -23,7 +25,7 @@ public:
 
 	TTuple<int, FVector2D> PickupItem(class AItemBase* Item);
 	void RemoveItem(FItemStruct& Item);
-	
+
 protected:
 	UFUNCTION()
 	void UpdateContainer();

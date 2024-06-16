@@ -19,6 +19,8 @@ public:
 	
 	TTuple<class UW_InventoryContainer*, int, FVector2D> PickupItem(class AItemBase* Item);
 	void RemoveItem(FItemStruct& Item);
+
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

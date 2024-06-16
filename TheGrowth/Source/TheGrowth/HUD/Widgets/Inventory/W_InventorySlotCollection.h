@@ -15,6 +15,8 @@ class THEGROWTH_API UW_InventorySlotCollection : public UUserWidget
 	virtual int32 NativePaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
 	void DrawBorderOutline(const FGeometry& AllottedGeometry, FSlateWindowElementList& OutDrawElements, int32 LayerId) const;
 
+	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
+	
 public:
 	UFUNCTION()
 	bool CanFitItem(class AItemBase* Item);
@@ -24,7 +26,7 @@ public:
 	UFUNCTION()
 	void RemoveItem(FItemStruct& Item);
 	
-	void PopulateSlotWithItem(FVector2D InventorySlot, class AItemBase* Item, bool bVertical);
+	void PopulateSlotWithItem(FItemStruct& Item);
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category= "Inventory")

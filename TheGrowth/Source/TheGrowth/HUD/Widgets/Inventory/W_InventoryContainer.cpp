@@ -3,6 +3,7 @@
 #include "W_InventoryContainerLayout.h"
 #include "W_InventorySlot.h"
 #include "W_InventorySlotCollection.h"
+#include "Blueprint/WidgetTree.h"
 #include "Components/Image.h"
 #include "Components/NamedSlot.h"
 #include "TheGrowth/Components/ItemComponent.h"
@@ -35,6 +36,11 @@ void UW_InventoryContainer::NativePreConstruct()
 	}
 	
 	UpdateContainer();
+}
+
+void UW_InventoryContainer::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
 }
 
 bool UW_InventoryContainer::IsOccupied() const
@@ -124,8 +130,17 @@ TTuple<int, FVector2D> UW_InventoryContainer::PickupItem(AItemBase* Item)
 
 void UW_InventoryContainer::RemoveItem(FItemStruct& Item)
 {
+	if (IsValid(LayoutWidget) == false)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s container layout invalid"), *GetName());
+		return;
+	}
+
 	if (Item.LocationInfo.Get<1>() != -1)
-		LayoutWidget->SlotCollections[Item.LocationInfo.Get<1>()]->RemoveItem(Item);
+	{
+		if (LayoutWidget->SlotCollections.Num() > Item.LocationInfo.Get<1>())
+			LayoutWidget->SlotCollections[Item.LocationInfo.Get<1>()]->RemoveItem(Item);
+	}
 	else
 		bOccupied = false;
 }
@@ -147,13 +162,11 @@ void UW_InventoryContainer::UpdateContainer()
 	if (ShouldCreateContainerWidget)
 	{
 		bOccupied = true;
-		
-		auto NewWidget = CreateWidget(GetOwningPlayer(), ContainerData->ContainerLayout);
 
-		LayoutWidget = Cast<UW_InventoryContainerLayout>(NewWidget);
+		LayoutWidget = WidgetTree->ConstructWidget(ContainerData->ContainerLayout);
 		
 		ContainerWidget->ClearChildren();
-		ContainerWidget->AddChild(NewWidget);
+		ContainerWidget->AddChild(LayoutWidget);
 		ContainerWidget->SetVisibility(ESlateVisibility::Visible);
 
 		if (IsValid(ItemSlot))

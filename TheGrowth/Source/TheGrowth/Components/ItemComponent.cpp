@@ -21,7 +21,7 @@ void UItemComponent::AddItem(FItemStruct& Item, TTuple<UW_InventoryContainer*, i
 		return;
 	
 	Item.LocationInfo = LocationInfo;
-	if (ItemStruct.Inventory.Num() <ItemStruct.MaxInventorySize)
+	if (ItemStruct.Inventory.Num() < ItemStruct.MaxInventorySize)
 		ItemStruct.Inventory.Add(Item);
 }
 

@@ -41,6 +41,8 @@ struct FItemStruct
 			return false;
 	}
 
+	void PopulateInventorySlotWithItem();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UItemData* ItemData{};
 	
