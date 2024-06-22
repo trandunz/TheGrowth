@@ -27,6 +27,7 @@ void ASurvivalHUD::BeginPlay()
 		return;
 
 	HUDWidget->AddToViewport();
+	HUDWidget->LateInitialize();
 
 	if (APawn* PlayerPawn = GetOwningPawn())
 	{

@@ -17,6 +17,7 @@
 #include "Components/TimelineComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "TheGrowth/Components/EntityComponent.h"
 #include "TheGrowth/Components/InventoryComponent.h"
 #include "TheGrowth/Components/ItemComponent.h"
 #include "TheGrowth/Components/SurvivalMovementComponent.h"
@@ -183,6 +184,9 @@ void ASurvivalCharacter::Tick(float DeltaSeconds)
 	CheckForInteractables();
 
 	UpdateLeanAngle(DeltaSeconds);
+
+	if (IsSprinting)
+		PlayerStateRef->GetEntityComponent()->OffsetStamina(-DeltaSeconds * 10.0f);
 }
 
 void ASurvivalCharacter::Move(const FInputActionValue& Value)
@@ -334,6 +338,10 @@ void ASurvivalCharacter::StartSprint()
 	if (IsValid(MovementComponent) == false)
 		return;
 
+	if (PlayerStateRef->GetEntityComponent()->GetCurrentStamina() / PlayerStateRef->GetEntityComponent()->GetMaxStamina() < 0.2f)
+		return;
+		
+	IsSprinting = true;
 	MovementComponent->StartSprint();
 }
 
@@ -342,6 +350,7 @@ void ASurvivalCharacter::EndSprint()
 	if (IsValid(MovementComponent) == false)
 		return;
 
+	IsSprinting = false;
 	MovementComponent->EndSprint();
 }
 

@@ -2,6 +2,7 @@
 
 #include "W_SurvivalHUD.h"
 
+#include "ReactiveSlider.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "TheGrowth/Components/EntityComponent.h"
@@ -14,6 +15,16 @@ void UW_SurvivalHUD::LateInitialize()
 	if (ASurvivalPlayerState* OwningPlayerState = GetOwningPlayerState<ASurvivalPlayerState>())
 	{
 		OwningEntityComponent = OwningPlayerState->GetEntityComponent();
+		UE_LOG(LogTemp, Warning, TEXT("Owning Entity Component Reference Assigned"));
+
+		if (IsValid(OwningEntityComponent))
+		{
+			if (IsValid(HealthBar))
+				HealthBar->SetSliderPercentage(OwningEntityComponent->GetCurrentHealth() / OwningEntityComponent->GetMaxHealth(), true);
+			
+			if (IsValid(StaminaBar))
+				StaminaBar->SetSliderPercentage(OwningEntityComponent->GetCurrentStamina() / OwningEntityComponent->GetMaxStamina(), true);
+		}
 	}
 }
 
@@ -25,6 +36,15 @@ void UW_SurvivalHUD::NativeOnInitialized()
 void UW_SurvivalHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	if (IsValid(OwningEntityComponent))
+	{
+		if (IsValid(HealthBar))
+			HealthBar->SetSliderPercentage(OwningEntityComponent->GetCurrentHealth() / OwningEntityComponent->GetMaxHealth(), true);
+
+		if (IsValid(StaminaBar))
+			StaminaBar->SetSliderPercentage(OwningEntityComponent->GetCurrentStamina() / OwningEntityComponent->GetMaxStamina(), true);
+	}
 }
 
 void UW_SurvivalHUD::ToggleInventoryMenu()

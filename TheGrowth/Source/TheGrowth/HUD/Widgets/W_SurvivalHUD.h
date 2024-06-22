@@ -37,4 +37,8 @@ protected: // Components //
 	class UW_Inventory* InventoryMenu{nullptr};
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (BindWidget))
 	class UImage* Crosshair{nullptr};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (BindWidgetOptional))
+	class UReactiveSlider* HealthBar{nullptr};
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category= Components, meta = (BindWidgetOptional))
+	class UReactiveSlider* StaminaBar{nullptr};
 };
