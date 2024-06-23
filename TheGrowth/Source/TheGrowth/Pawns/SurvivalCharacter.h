@@ -46,6 +46,7 @@ protected: // Input //
 
 	void StartSprint();
 	void EndSprint();
+	void UpdateStaminaFromSprint(float DeltaSeconds);
 
 public:
 	UFUNCTION()
@@ -133,8 +134,6 @@ protected: // Movement Settings
 	float LeanSpeed{200.0f};
 	UPROPERTY(BlueprintReadOnly, Category= Movement)
 	float LeanInput{};
-	UPROPERTY(BlueprintReadOnly, Category= Movement)
-	float IsSprinting{};
 	
 protected: // Camera Settings
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))

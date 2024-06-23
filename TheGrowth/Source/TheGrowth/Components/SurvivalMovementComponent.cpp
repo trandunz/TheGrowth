@@ -39,6 +39,11 @@ bool USurvivalMovementComponent::IsMovementMode(EMovementMode InMovementMode) co
 	return InMovementMode == MovementMode;
 }
 
+bool USurvivalMovementComponent::IsSprinting() const
+{
+	return Safe_bWantsToSprint;
+}
+
 bool USurvivalMovementComponent::CanCrouchInCurrentState() const
 {
 	return Super::CanCrouchInCurrentState() && IsMovingOnGround();

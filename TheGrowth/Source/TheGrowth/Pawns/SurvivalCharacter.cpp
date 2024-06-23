@@ -184,9 +184,8 @@ void ASurvivalCharacter::Tick(float DeltaSeconds)
 	CheckForInteractables();
 
 	UpdateLeanAngle(DeltaSeconds);
-
-	if (IsSprinting)
-		PlayerStateRef->GetEntityComponent()->OffsetStamina(-DeltaSeconds * 10.0f);
+	UpdateStaminaFromSprint(DeltaSeconds);
+		
 }
 
 void ASurvivalCharacter::Move(const FInputActionValue& Value)
@@ -340,8 +339,7 @@ void ASurvivalCharacter::StartSprint()
 
 	if (PlayerStateRef->GetEntityComponent()->GetCurrentStamina() / PlayerStateRef->GetEntityComponent()->GetMaxStamina() < 0.2f)
 		return;
-		
-	IsSprinting = true;
+	
 	MovementComponent->StartSprint();
 }
 
@@ -349,9 +347,19 @@ void ASurvivalCharacter::EndSprint()
 {
 	if (IsValid(MovementComponent) == false)
 		return;
-
-	IsSprinting = false;
+	
 	MovementComponent->EndSprint();
+}
+
+void ASurvivalCharacter::UpdateStaminaFromSprint(float DeltaSeconds)
+{
+	if (MovementComponent->IsSprinting() == false)
+		return;
+	
+	PlayerStateRef->OffsetStamina(-DeltaSeconds * 10.0f);
+		
+	if (PlayerStateRef->GetEntityComponent()->GetCurrentStamina() <= 0.0f)
+		EndSprint();
 }
 
 void ASurvivalCharacter::OffsetHealth(float Amount)

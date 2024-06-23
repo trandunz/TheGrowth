@@ -48,6 +48,6 @@ void UEntityComponent::RegenerateStamina(float DeltaSeconds)
 {
 	if (bShouldRegenStamina == false)
 		return;
-
+	
 	CurrentStamina = FMath::Clamp(CurrentStamina + (DeltaSeconds * StaminaRegenerationSpeed), 0, MaxStamina);
 }

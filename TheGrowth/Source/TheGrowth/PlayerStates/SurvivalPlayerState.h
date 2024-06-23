@@ -18,6 +18,8 @@ public:
 	UFUNCTION()
 	void OffsetHealth(float Amount);
 	UFUNCTION()
+	void OffsetStamina(float Amount);
+	UFUNCTION()
 	bool IsDead() const;
 
 public: // Setters & Getters //

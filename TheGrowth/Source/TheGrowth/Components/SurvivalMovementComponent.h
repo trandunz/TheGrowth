@@ -25,6 +25,7 @@ class THEGROWTH_API USurvivalMovementComponent : public UCharacterMovementCompon
 	
 	bool IsCustomMovementMode(ECustomMovementMode InCustomMovementMode) const;
 	bool IsMovementMode(EMovementMode InMovementMode) const;
+	bool IsSprinting() const;
 
 	virtual bool CanCrouchInCurrentState() const override;
 	virtual float GetMaxSpeed() const override;
