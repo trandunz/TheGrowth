@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CharacterBase.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "TheGrowth/DataAssets/ItemData.h"
@@ -11,7 +12,7 @@
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
-class ASurvivalCharacter : public ACharacter
+class ASurvivalCharacter : public ACharacterBase
 {
 	GENERATED_BODY()
 	friend class AItemBase;
@@ -49,8 +50,7 @@ protected: // Input //
 	void UpdateStaminaFromSprint(float DeltaSeconds);
 
 public:
-	UFUNCTION()
-	void OffsetHealth(float Amount);
+	virtual void TakeDamage(FString Bone, class AProjectileBase* Projectile);
 
 	UFUNCTION(BlueprintCallable)
 	FTransform GetLeftHandSocketTransform();
@@ -63,9 +63,6 @@ protected:
 	void UpdateBoomLength(float Increment);
 	UFUNCTION()
 	void SetPerspective(bool FirstPerson);
-
-	UFUNCTION()
-	void SetRagdoll(bool Ragdoll);
 
 	UFUNCTION()
 	void UpdateZoomTimeline(float Delta);
@@ -103,6 +100,9 @@ protected:
 
 	UFUNCTION()
 	void Reload();
+
+	UFUNCTION()
+	void GetLookInputVariables();
 	
 
 protected: // Interaction
@@ -164,6 +164,17 @@ protected: // Camera Settings
 	UCurveFloat* CameraResetCurve{nullptr};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
 	float CameraResetTime{0.2f};
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
+	FVector PitchOffsetPosition{};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
+	FVector CameraRotationOffset{};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
+	FRotator CameraRotationCurrent{};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
+	FRotator CameraRotationPrevious{};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CameraSettings, meta = (AllowPrivateAccess = "true"))
+	FRotator CameraRotationRate{};
 	
 protected: // References
 	UPROPERTY(BlueprintReadOnly, Category= References)

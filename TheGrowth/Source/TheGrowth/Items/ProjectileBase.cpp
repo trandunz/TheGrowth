@@ -4,6 +4,8 @@
 #include "Components/ArrowComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "TheGrowth/DataAssets/ProjectileData.h"
+#include "TheGrowth/Pawns/CharacterBase.h"
 
 AProjectileBase::AProjectileBase()
 {
@@ -60,12 +62,43 @@ void AProjectileBase::Tick(float DeltaTime)
 
 			FCollisionQueryParams Params{};
 			Params.AddIgnoredActors(ActorsToIngore);
-			if(GetWorld()->LineTraceSingleByChannel(hitResult, StartLineTrace, EndLineTrace, ECC_WorldDynamic, Params))
+			if(GetWorld()->LineTraceSingleByChannel(hitResult, StartLineTrace, EndLineTrace, ECC_GameTraceChannel1, Params))
 			{
 				if (auto hitActor = hitResult.GetActor())
 				{
-					UE_LOG(LogTemp, Display, TEXT("Bullet Hit %s!"), *hitActor->GetName());
-					
+					if (ACharacterBase* SomeEntity = Cast<ACharacterBase>(hitActor))
+					{
+						USkeletalMeshComponent* EntityMesh = SomeEntity->GetMesh();
+						FName ParentBoneName = hitResult.BoneName;
+						FString ParentBoneString = ParentBoneName.ToString();
+						
+						while (ParentBoneString != "None")
+						{
+							if (ParentBoneString == "head" ||		// Head
+								ParentBoneString == "neck_01" ||	// Neck
+								ParentBoneString == "spine_03" ||	// Chest
+								ParentBoneString == "spine_01" ||	// Stomach
+								ParentBoneString == "upperarm_r" ||	// Right Arm
+								ParentBoneString == "upperarm_l" ||	// Left Arm
+								ParentBoneString == "hand_r" ||		// Right Hand
+								ParentBoneString == "hand_l" ||		// Left Hand
+								ParentBoneString == "thigh_r" ||	// Right Leg
+								ParentBoneString == "thigh_l" ||	// Left Leg
+								ParentBoneString == "foot_r" ||		// Right Foot
+								ParentBoneString == "foot_l"		// Left Foot
+								) 
+							{
+								SomeEntity->TakeDamage(ParentBoneString, this);
+								UE_LOG(LogTemp, Warning, TEXT("Bullet Hit %s in the %s!"), *hitActor->GetName(), *ParentBoneName.ToString());
+								break;
+							}
+							else
+							{
+								ParentBoneName = EntityMesh->GetParentBone(ParentBoneName);
+								ParentBoneString = ParentBoneName.ToString();
+							}
+						}
+					}
 				}
 
 				if (IsValid(BulletImpactVFX))
@@ -98,6 +131,22 @@ void AProjectileBase::Tick(float DeltaTime)
 
 void AProjectileBase::SetDirectionOfMotion(FVector NewDirection)
 {
-	Velocity = NewDirection.GetSafeNormal() * TravelSpeed;
+	if (IsValid(ProjectileData) == false)
+		return;
+	
+	Velocity = NewDirection.GetSafeNormal() * ProjectileData->TravelSpeed;
+}
+
+float AProjectileBase::GetDamage() const
+{
+	if (IsValid(ProjectileData) == false)
+		return 0.0f;
+	
+	return ProjectileData->Damage;
+}
+
+UProjectileData* AProjectileBase::GetProjectileData() const
+{
+	return ProjectileData;
 }
 

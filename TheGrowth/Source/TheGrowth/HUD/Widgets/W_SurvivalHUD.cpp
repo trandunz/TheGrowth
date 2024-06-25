@@ -12,15 +12,15 @@
 
 void UW_SurvivalHUD::LateInitialize()
 {
-	if (ASurvivalPlayerState* OwningPlayerState = GetOwningPlayerState<ASurvivalPlayerState>())
+	if (ASurvivalCharacter* OwningPlayerPawn = GetOwningPlayerPawn<ASurvivalCharacter>())
 	{
-		OwningEntityComponent = OwningPlayerState->GetEntityComponent();
+		OwningEntityComponent = OwningPlayerPawn->GetEntityComponent();
 		UE_LOG(LogTemp, Warning, TEXT("Owning Entity Component Reference Assigned"));
 
 		if (IsValid(OwningEntityComponent))
 		{
 			if (IsValid(HealthBar))
-				HealthBar->SetSliderPercentage(OwningEntityComponent->GetCurrentHealth() / OwningEntityComponent->GetMaxHealth(), true);
+				HealthBar->SetSliderPercentage(OwningEntityComponent->GetTotalCurrentHealth() / OwningEntityComponent->GetTotalMaxHealth(), true);
 			
 			if (IsValid(StaminaBar))
 				StaminaBar->SetSliderPercentage(OwningEntityComponent->GetCurrentStamina() / OwningEntityComponent->GetMaxStamina(), true);
@@ -40,7 +40,7 @@ void UW_SurvivalHUD::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	if (IsValid(OwningEntityComponent))
 	{
 		if (IsValid(HealthBar))
-			HealthBar->SetSliderPercentage(OwningEntityComponent->GetCurrentHealth() / OwningEntityComponent->GetMaxHealth(), true);
+			HealthBar->SetSliderPercentage(OwningEntityComponent->GetTotalCurrentHealth() / OwningEntityComponent->GetTotalMaxHealth(), true);
 
 		if (IsValid(StaminaBar))
 			StaminaBar->SetSliderPercentage(OwningEntityComponent->GetCurrentStamina() / OwningEntityComponent->GetMaxStamina(), true);

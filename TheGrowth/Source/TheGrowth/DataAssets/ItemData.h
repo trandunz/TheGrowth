@@ -57,6 +57,12 @@ struct FItemStruct
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MaxInventorySize{9999};
+
+	bool bEquipped{false};
+	float Durability{100.0f};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UArmourData* ArmourData{};
 };
 
 UCLASS()

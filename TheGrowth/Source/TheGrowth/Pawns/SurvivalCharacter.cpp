@@ -21,13 +21,16 @@
 #include "TheGrowth/Components/InventoryComponent.h"
 #include "TheGrowth/Components/ItemComponent.h"
 #include "TheGrowth/Components/SurvivalMovementComponent.h"
+#include "TheGrowth/DataAssets/ArmourData.h"
 #include "TheGrowth/DataAssets/ItemData.h"
+#include "TheGrowth/DataAssets/ProjectileData.h"
 #include "TheGrowth/HUD/SurvivalHUD.h"
 #include "TheGrowth/HUD/Widgets/W_SurvivalHUD.h"
 #include "TheGrowth/HUD/Widgets/Inventory/W_Inventory.h"
 #include "TheGrowth/HUD/Widgets/Inventory/Tabs/W_Gear.h"
 #include "TheGrowth/Interfaces/InteractInterface.h"
 #include "TheGrowth/Items/ItemBase.h"
+#include "TheGrowth/Items/ProjectileBase.h"
 #include "TheGrowth/Items/WeaponBase.h"
 #include "TheGrowth/PlayerStates/SurvivalPlayerState.h"
 
@@ -35,7 +38,7 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 ASurvivalCharacter::ASurvivalCharacter()
 {
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(42.f, 90.0f);
 	
 	bUseControllerRotationYaw = true;
 	
@@ -337,7 +340,7 @@ void ASurvivalCharacter::StartSprint()
 	if (IsValid(MovementComponent) == false)
 		return;
 
-	if (PlayerStateRef->GetEntityComponent()->GetCurrentStamina() / PlayerStateRef->GetEntityComponent()->GetMaxStamina() < 0.2f)
+	if (GetEntityComponent()->GetCurrentStamina() / GetEntityComponent()->GetMaxStamina() < 0.2f)
 		return;
 	
 	MovementComponent->StartSprint();
@@ -356,20 +359,91 @@ void ASurvivalCharacter::UpdateStaminaFromSprint(float DeltaSeconds)
 	if (MovementComponent->IsSprinting() == false)
 		return;
 	
-	PlayerStateRef->OffsetStamina(-DeltaSeconds * 10.0f);
+	OffsetStamina(-DeltaSeconds * 10.0f);
 		
-	if (PlayerStateRef->GetEntityComponent()->GetCurrentStamina() <= 0.0f)
+	if (GetEntityComponent()->GetCurrentStamina() <= 0.0f)
 		EndSprint();
 }
 
-void ASurvivalCharacter::OffsetHealth(float Amount)
+void ASurvivalCharacter::TakeDamage(FString Bone, AProjectileBase* Projectile)
 {
-	if (PlayerStateRef->IsDead() == false)
+	if (IsDead() == false)
 	{
-		PlayerStateRef->OffsetHealth(Amount);
+		const EBodyPart HitBodyPart = UEntityComponent::ConvertBoneToBodyPart(Bone);
+		
+		FItemStruct* EquippedArmour{nullptr};
+		for(auto& Item : InventoryComponent->Inventory)
+		{
+			if (Item.bEquipped && IsValid(Item.ItemData))
+			{
+				if (Item.ItemData->ItemType == EItemType::Head || Item.ItemData->ItemType == EItemType::Face)
+				{
+					if (HitBodyPart == HEAD)
+					{
+						EquippedArmour = &Item;
+					}
+				}
+				if (Item.ItemData->ItemType == EItemType::Body || Item.ItemData->ItemType == EItemType::Rig)
+				{
+					if (HitBodyPart == CHEST)
+					{
+						EquippedArmour = &Item;
+					}
+					else if (HitBodyPart == STOMACH)
+					{
+						EquippedArmour = &Item;
+					}
+				}
+			}
+		}
 
-		// Check If It Killed Player //
-		if (PlayerStateRef->IsDead())
+		if (EquippedArmour && IsValid(Projectile->GetProjectileData()))
+		{
+			int32 RicochetChance = Projectile->GetProjectileData()->RicochetChance;
+			int32 PenatrationRating = Projectile->GetProjectileData()->PenetrationRating;
+			int32 ArmourRating = EquippedArmour->ArmourData->ArmourRating;
+			float Durability = EquippedArmour->Durability;
+			
+			if (rand() % RicochetChance == 0)	// Ricochet
+			{
+				// Spawn Bullet At Reflection Angle
+				//AProjectileBase* SpawnedProjectile = GetWorld()->SpawnActor<AProjectileBase>(Projectile->StaticClass());
+				//SpawnedProjectile->SetActorTransform(Projectile->GetActorTransform());
+				//
+				//SpawnedProjectile->SetDirectionOfMotion(Projectile->GetDirection());
+				//SpawnedProjectile->ActorsToIngore.Add(this);
+			}
+			else if (ArmourRating > PenatrationRating)	// Armour Stops Bullet
+			{
+				// Apply reduced damage
+				float ResidualDamage = FMath::Clamp(Projectile->GetDamage() - Durability, PenatrationRating, Projectile->GetDamage());
+
+				// Only apply bleeding if it passed through
+				if (ResidualDamage <= PenatrationRating)
+					EntityComponent->OffsetHealth(HitBodyPart, -ResidualDamage, false);
+				else
+					EntityComponent->OffsetHealth(HitBodyPart, -ResidualDamage);
+
+				// Degrade armour
+				int32 ArmourRatingDifference = FMath::Clamp(ArmourRating - PenatrationRating, 1.0f, ArmourRating);
+				EquippedArmour->Durability = FMath::Clamp((EquippedArmour->Durability - Projectile->GetDamage()) / ArmourRatingDifference, 0.0f, EquippedArmour->Durability);
+			}
+			else // Bullet Goes Through Armour
+			{
+				// Apply Raw Damage
+				EntityComponent->OffsetHealth(HitBodyPart, -Projectile->GetDamage());
+				
+				// Degrade armour
+				EquippedArmour->Durability = FMath::Clamp((EquippedArmour->Durability - Projectile->GetDamage()), 0.0f, EquippedArmour->Durability);
+			}
+		}
+		else	// Apply Raw Damage
+		{
+			EntityComponent->OffsetHealth(HitBodyPart, -Projectile->GetDamage());
+		}
+
+		// Check If It Killed Player
+		if (IsDead())
 		{
 			SetRagdoll(true);
 		}
@@ -437,34 +511,6 @@ void ASurvivalCharacter::SetPerspective(bool FirstPerson)
 		
 		if (bFreeLooking == false)
 			bUseControllerRotationYaw = true;
-	}
-}
-
-void ASurvivalCharacter::SetRagdoll(bool Ragdoll)
-{
-	if (Ragdoll)
-	{
-		GetMesh()->SetAllBodiesSimulatePhysics(true);
-		GetMesh()->SetSimulatePhysics(true);
-		GetMesh()->WakeAllRigidBodies();
-		GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-
-		if (IsValid(PlayerController))
-		{
-			PlayerController->SetIgnoreMoveInput(true);
-		}
-	}
-	else
-	{
-		GetMesh()->SetAllBodiesSimulatePhysics(false);
-		GetMesh()->SetSimulatePhysics(false);
-		GetMesh()->WakeAllRigidBodies();
-		GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		
-		if (IsValid(PlayerController))
-		{
-			PlayerController->SetIgnoreMoveInput(false);
-		}
 	}
 }
 
@@ -646,4 +692,48 @@ void ASurvivalCharacter::Reload()
 			}
 		}
 	}
+}
+
+void ASurvivalCharacter::GetLookInputVariables()
+{
+	FRotator DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(GetControlRotation(), GetActorRotation());
+	float NormalizedPitch = UKismetMathLibrary::NormalizeToRange(DeltaRot.Pitch, -90.0f, 90.0f);
+	PitchOffsetPosition = {
+		0.0f,
+		FMath::Lerp(3.0f, -3.0f, NormalizedPitch),
+		FMath::Lerp(2.0f, -2.0f, NormalizedPitch)
+	};
+
+	float FurtherNormalizedPitch = UKismetMathLibrary::NormalizeToRange(NormalizedPitch, 0.0f, 0.5f);
+	FurtherNormalizedPitch = FMath::Clamp(FurtherNormalizedPitch, 0.0f, 1.0f);
+	GetMesh()->SetRelativeLocation(
+	FVector{
+		FMath::Lerp(35.0f, 0.0f, FurtherNormalizedPitch),
+		GetMesh()->GetRelativeLocation().Y,
+		GetMesh()->GetRelativeLocation().Z
+	});
+
+	CameraRotationCurrent = FollowCamera->GetComponentRotation();
+	DeltaRot = UKismetMathLibrary::NormalizedDeltaRotator(CameraRotationCurrent, CameraRotationPrevious);
+	FRotator ClampedDeltaRot = FRotator(
+		0.0f,
+		FMath::Clamp(DeltaRot.Yaw, -5.0f, 5.0f),
+		FMath::Clamp(DeltaRot.Pitch * -1.0f, -5.0f, 5.0f)
+		);
+
+	float DeltaSeconds = UGameplayStatics::GetWorldDeltaSeconds(GetWorld());
+	CameraRotationRate = UKismetMathLibrary::RInterpTo(
+		CameraRotationRate,
+		ClampedDeltaRot,
+		DeltaSeconds,
+		(1.0f / DeltaSeconds) / 6.0f
+		);
+
+	float NormalizeCameraRateRoll = UKismetMathLibrary::NormalizeToRange(CameraRotationRate.Roll, -5.0f, 5.0f);
+	float NormalizeCameraRateYaw = UKismetMathLibrary::NormalizeToRange(CameraRotationRate.Yaw, -5.0f, 5.0f);
+	CameraRotationOffset = {
+		FMath::Lerp(-6.0f, 6.0f, NormalizeCameraRateYaw),
+		0.0f,
+		FMath::Lerp(-10.0f, 10.0f, NormalizeCameraRateRoll)
+	};
 }

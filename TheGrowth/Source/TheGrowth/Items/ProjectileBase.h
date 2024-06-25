@@ -8,6 +8,7 @@ UCLASS()
 class THEGROWTH_API AProjectileBase : public AActor
 {
 	friend class AWeaponBase;
+	friend class ASurvivalCharacter;
 	GENERATED_BODY()
 
 	AProjectileBase();
@@ -19,9 +20,11 @@ class THEGROWTH_API AProjectileBase : public AActor
 protected:
 	void SetDirectionOfMotion(FVector NewDirection);
 
+public:
+	float GetDamage() const;
+	class UProjectileData* GetProjectileData() const;
+
 protected:
-	UPROPERTY(EditAnywhere)
-	float TravelSpeed{86600.0f};
 	float BulletTime{0.0f};
 	UPROPERTY(Replicated)
 	FVector Velocity;
@@ -31,8 +34,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float BulletLifetime = 30.0f;
 
-	UPROPERTY(EditAnywhere)
-	int Damage{35};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UProjectileData* ProjectileData{nullptr};
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bDrawDebugTracer{true};
